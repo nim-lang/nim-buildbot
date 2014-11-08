@@ -1,4 +1,3 @@
-from functools import wraps
 from pathlib import PureWindowsPath, PurePosixPath
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source.git import Git
@@ -355,6 +354,7 @@ def construct_nim_build(platform, csources_script_cmd, f=None):
         f = BuildFactory()
 
     steps = []
+    steps.extend(update_utility_scripts(platform))
     steps.extend(update_repositories(platform))
     steps.extend(clean_repositories(platform))
     steps.extend(build_csources(platform, csources_script_cmd))
