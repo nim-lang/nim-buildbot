@@ -3,8 +3,44 @@ from buildbot.status.results import SUCCESS
 from buildbot.steps.source.git import Git
 from buildbot.steps.shell import ShellCommand
 from buildbot.process.factory import BuildFactory
+from buildbot.process.properties import Property
 
 # Constants
+python_exe_property_name = 'python_exe'
+run_cpp_builds_property_name = 'run_cpp_builds'
+run_release_builds_property_name = 'run_release_builds'
+hide_cpp_builds_property_name = 'hide_cpp_builds'
+hide_release_builds_property_name = 'hide_release_builds'
+
+python_exe = Property('python_exe', default='python')
+
+
+def step_has_property(property_name, default=None, takesResults=False):
+    def check_for_property(step):
+        result = step.getProperty(property_name)
+        if result is None:
+            return default
+        else:
+            return result
+    if takesResults:
+        return lambda results, s: check_for_property(s)
+    else:
+        return check_for_property
+
+
+def step_has_properties(property_names, default=None, takesResults=False,
+                        sentinal=None):
+    def check_for_property(step):
+        for name in property_names:
+            result = step.getProperty(name)
+            if result is not sentinal:
+                return result
+        return default
+    if takesResults:
+        return lambda results, s: check_for_property(s)
+    else:
+        return check_for_property
+
 
 # Git Urls
 nim_git_url = 'git://github.com/Araq/Nimrod'
@@ -18,6 +54,8 @@ resource_dirs = {
     'nim_dir': 'build/',
     'csources_dir': 'build/csources/',
     'scripts_dir': 'scripts/',
+    'tester_dir': 'tests/testament/',
+    'compiler_dir': 'compiler'
 }
 
 
@@ -74,10 +112,10 @@ def update_utility_scripts(platform):
             descriptionSuffix=' Utility Scripts',
 
             repourl=scripts_git_url,
-            alwaysUseFull=True,
+            alwaysUseLatest=True,
 
             workdir=str(platform.scripts_dir),
-            hideStepIf=has_passed,
+            hideStepIf=True,
             **common_parameters
         )
     ]
@@ -118,6 +156,7 @@ def clean_repositories(platform):
     Requires that the repositories already exist, in the layout done by
     update_repositories.
     """
+    csources_filter = str(platform.csources_dir / '*')
     return [
         ShellCommand(
             name='Clean Local Nim Repository',
@@ -126,7 +165,7 @@ def clean_repositories(platform):
             descriptionSuffix=' Local Nim Repository',
 
             command=[
-                'git', 'clean', '-x', '-f', '-e', str(platform.csources_dir / '*'), '-d'],
+                'git', 'clean', '-x', '-f', '-e', csources_filter, '-d'],
             workdir=str(platform.nim_dir),
             haltOnFailure=True,
         ),
@@ -169,6 +208,7 @@ def normalize_nim_names(platform):
     """
     Makes sure that both a 'nim' and 'nimrod' binary are present.
     """
+    bin_dir = str(platform.nim_dir / 'bin')
     return [
         ShellCommand(
             name='Normalizing Binary Names',
@@ -176,9 +216,10 @@ def normalize_nim_names(platform):
             descriptionDone='Normalized',
             descriptionSuffix=' Binary Names',
 
-            command=['python', str(platform.scripts_dir / 'normalize_nim.py')],
-            workdir=str(platform.nim_dir / 'bin'),
-            hideStepIf=has_passed
+            command=[python_exe, str(
+                platform.scripts_dir / 'normalize_nim.py'), bin_dir],
+            workdir=str(platform.current_dir),
+            hideStepIf=False
         )
     ]
 
@@ -188,10 +229,11 @@ def compile_koch(platform):
     """
     Compiles the koch utility.
     """
+    bin_dir = str(platform.nim_dir / 'bin')
     base_env = {
         'PATH': [
             str(platform.current_dir),
-            str(platform.current_dir / 'bin'),
+            bin_dir,
             "${PATH}"
         ]
     }
@@ -203,7 +245,7 @@ def compile_koch(platform):
             descriptionDone='Compiled',
             descriptionSuffix=' Koch Binary',
 
-            command=['nimrod', 'c', 'koch.nim'],
+            command=['nim', 'c', 'koch.nim'],
             env=base_env,
             workdir=str(platform.nim_dir),
             haltOnFailure=True,
@@ -212,7 +254,8 @@ def compile_koch(platform):
 
 
 @inject_paths
-def boot_nimrod_with_c_backend(platform):
+def boot_nimrod(platform):
+    nimfile_dir = str(platform.compiler_dir / 'nim.nim')
     base_env = {
         'PATH': [
             str(platform.current_dir),
@@ -223,18 +266,6 @@ def boot_nimrod_with_c_backend(platform):
 
     return [
         ShellCommand(
-            name='Bootstrap Release Version of Nim Compiler (With C Backend)',
-            description='Booting',
-            descriptionDone='Booted',
-            descriptionSuffix=' Release Nim Compiler (With C Backend)',
-
-            command=['nimrod', 'c', str(platform.nim_dir / 'compiler' / 'nim.nim'), '-d:release'],
-            workdir=str(platform.nim_dir),
-            env=base_env,
-            haltOnFailure=False,
-        ),
-
-        ShellCommand(
             name='Bootstrap Debug Version of Nim Compiler (With C Backend)',
             description='Booting',
             descriptionDone='Booted',
@@ -244,6 +275,76 @@ def boot_nimrod_with_c_backend(platform):
             workdir=str(platform.nim_dir),
             env=base_env,
             haltOnFailure=True,
+        ),
+
+        ShellCommand(
+            name='Bootstrap Release Version of Nim Compiler (With C Backend)',
+            description='Booting',
+            descriptionDone='Booted',
+            descriptionSuffix=' Release Nim Compiler (With C Backend)',
+
+            command=['nim', 'c', '-d:release', nimfile_dir],
+            workdir=str(platform.nim_dir),
+            env=base_env,
+
+            doStepIf=step_has_property(
+                property_name=run_release_builds_property_name,
+                default=True),
+            hideStepIf=step_has_property(
+                property_name=hide_release_builds_property_name,
+                default=False,
+                takesResults=True),
+            haltOnFailure=False
+        ),
+
+        ShellCommand(
+            name='Bootstrap Debug Version of Nim Compiler (With C++ Backend)',
+            description='Booting',
+            descriptionDone='Booted',
+            descriptionSuffix=' Debug Nim Compiler (With C++ Backend)',
+
+            command=['nim', 'cpp', nimfile_dir],
+            workdir=str(platform.nim_dir),
+            env=base_env,
+
+            doStepIf=step_has_property(
+                property_name=run_cpp_builds_property_name,
+                default=True
+            ),
+            hideStepIf=step_has_property(
+                property_name=hide_cpp_builds_property_name,
+                default=False,
+                takesResults=True
+            ),
+            haltOnFailure=True
+        ),
+
+        ShellCommand(
+            name='Bootstrap Release Version of Nim Compiler (With C++ Backend)',
+            description='Booting',
+            descriptionDone='Booted',
+            descriptionSuffix=' Release Nim Compiler (With C++ Backend)',
+
+            command=['nim', 'cpp', '-d:release', nimfile_dir],
+            workdir=str(platform.nim_dir),
+            env=base_env,
+
+            doStepIf=step_has_properties(
+                property_names=[
+                    run_cpp_builds_property_name,
+                    run_release_builds_property_name
+                ],
+                default=True
+            ),
+            hideStepIf=step_has_properties(
+                property_names=[
+                    hide_cpp_builds_property_name,
+                    hide_release_builds_property_name
+                ],
+                default=False,
+                takesResults=True
+            ),
+            haltOnFailure=False,
         )
     ]
 
@@ -269,6 +370,7 @@ def run_testament(platform):
             workdir=str(platform.nim_dir),
             env=base_env,
             haltOnFailure=True,
+            timeout=10800
         )
     ]
 
@@ -360,7 +462,7 @@ def construct_nim_build(platform, csources_script_cmd, f=None):
     steps.extend(build_csources(platform, csources_script_cmd))
     steps.extend(normalize_nim_names(platform))
     steps.extend(compile_koch(platform))
-    steps.extend(boot_nimrod_with_c_backend(platform))
+    steps.extend(boot_nimrod(platform))
     steps.extend(run_testament(platform))
     for step in steps:
         f.addStep(step)
