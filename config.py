@@ -15,10 +15,10 @@
 #
 #  - 'run_release_builds': Whether to run release builds. Defaults to true.
 #
-#  - 'hide_cpp_builds': Whether to show builds which use the C++ compiler.
+#  - 'hide_cpp_builds': Whether to hide builds which use the C++ compiler.
 #                       Defaults to false.
 #
-#  - 'hide_release_builds': Whether to show release builds. Defaults to false.
+#  - 'hide_release_builds': Whether to hide release builds. Defaults to false.
 
 # Global Configuration
 from build_steps import construct_nim_build, python_exe_property_name
