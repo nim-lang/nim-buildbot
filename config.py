@@ -5,7 +5,7 @@
 # and packaging the Nim compiler.
 
 # The following is a list of properties that can be used to influence the
-# build processes. All these properties are assigned to variables of the
+# build processes. All these property names are assigned to variables of the
 # same name with '_property_name':
 #  - 'python_exe': Name of the python executable to call when using
 #                  python scripts. Defaults to 'python'.
@@ -204,6 +204,7 @@ c['schedulers'] = [
         name="force-build-scheduler",
         builderNames=all_builder_names,
         buttonName="Force Compiler Build",
+        label='Manual Compiler Build'
         properties=[]
     )
 ]
