@@ -54,7 +54,7 @@ class BuildStatusImageResource(HtmlResource):
         # Check if the builder in parameter exists.
         try:
             builder = status.getBuilder(name)
-        except:
+        except NameError:
             return "unknown builder"
 
         # Check if the build in parameter exists.
@@ -74,7 +74,7 @@ class BuildStatusImageResource(HtmlResource):
 
         return imgcontent
 
-class WebStatus(html.WebStatus):
+class BuildStatusIconWebStatus(html.WebStatus):
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
         html.WebStatus.setupUsualPages(self, numbuilds, num_events, num_events_max)
         self.putChild("buildstatusimage", BuildStatusImageResource())
@@ -291,7 +291,7 @@ authz_cfg = authz.Authz(
     stopAllBuilds='auth',
     cancelPendingBuild='auth',
 )
-c['status'].append(WebStatus(http_port=8010, authz=authz_cfg))
+c['status'].append(BuildStatusIconWebStatus(http_port=8010, authz=authz_cfg))
 
 
 # PROJECT IDENTITY
