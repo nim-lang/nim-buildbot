@@ -235,7 +235,7 @@ def compile_koch(platform):
         'PATH': [
             str(platform.current_dir),
             bin_dir,
-            'bin'
+            'bin',
             "${PATH}"
         ]
     }
