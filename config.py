@@ -88,7 +88,7 @@ c = BuildmasterConfig = {}
 
 # Buildslave Configuration
 from buildbot.buildslave import BuildSlave
-
+from infostore import slave_passwords
 # Build slaves controlled by the master server
 # We use at least two slaves for each platform - a 32 bit slave, and a 64-bit
 # slave.
@@ -99,13 +99,13 @@ default_slave_params = {
 c['slaves'] = [
     # Windows slaves
     BuildSlave(
-        "windows-x64-slave-1", "",
+        "windows-x64-slave-1", slave_passwords[0],
         properties={},
         **default_slave_params
     ),
 
     BuildSlave(
-        "windows-x32-slave-1", "",
+        "windows-x32-slave-1", slave_passwords[1],
         properties={},
         **default_slave_params
     ),
@@ -113,13 +113,13 @@ c['slaves'] = [
 
     # Linux slaves
     BuildSlave(
-        "linux-x64-slave-1", "",
+        "linux-x64-slave-1", slave_passwords[2],
         properties={},
         **default_slave_params
     ),
 
     BuildSlave(
-        "linux-x32-slave-1", "",
+        "linux-x32-slave-1", slave_passwords[3],
         properties={},
         **default_slave_params
     ),
@@ -127,19 +127,19 @@ c['slaves'] = [
 
     # Mac slaves
     BuildSlave(
-        "mac-x64-slave-1", "",
+        "mac-x64-slave-1", slave_passwords[4],
         properties={},
         **default_slave_params
     ),
 
     BuildSlave(
-        "mac-x32-slave-1", "",
+        "mac-x32-slave-1", slave_passwords[5],
         properties={},
         **default_slave_params
     ),
 
     BuildSlave(
-        "linux-arm5-slave-1", "",
+        "linux-arm5-slave-1", slave_passwords[6],
         properties={
             python_exe_property_name: 'python27'
         },
@@ -164,14 +164,15 @@ c['protocols'] = {'pb': {'port': 9989}}
 
 # CHANGESOURCES
 from buildbot.changes.pb import PBChangeSource
+from infostore import change_source_credentials
 
 # List of sources to retrieve change notifications from.
 # We get our sources from notifications sent by the github hook bot on a port.
 
 c['change_source'] = [
     PBChangeSource(
-        user='',
-        passwd=''
+        user=change_source_credentials[0][0],
+        passwd=change_source_credentials[0][1]
     )
 ]
 
@@ -272,6 +273,7 @@ c['schedulers'] = [
 # STATUS TARGETS
 from buildbot.status import html
 from buildbot.status.web import authz, auth
+from infostore import user_credentials
 
 # 'status' is a list of Status Targets. The results of each build will be
 # pushed to these targets. buildbot/status/*.py has a variety to choose from,
@@ -282,7 +284,7 @@ c['status'] = []
 authz_cfg = authz.Authz(
     # change any of these to True to enable; see the manual for more
     # options
-    auth=auth.BasicAuth([("", "")]),
+    auth=auth.BasicAuth(user_credentials),
     gracefulShutdown=False,
     forceBuild='auth',  # use this to test your slave once it is set up
     forceAllBuilds='auth',
