@@ -374,7 +374,7 @@ def run_testament(platform):
             workdir=str(platform.nim_dir),
             env=base_env,
             haltOnFailure=True,
-            timeout=10800
+            timeout=21600
         )
     ]
 
