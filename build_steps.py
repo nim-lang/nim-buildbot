@@ -262,6 +262,7 @@ def boot_nimrod(platform):
         'PATH': [
             str(platform.current_dir),
             str(platform.current_dir / 'bin'),
+            'bin',
             "${PATH}"
         ]
     }
@@ -357,6 +358,7 @@ def run_testament(platform):
         'PATH': [
             str(platform.current_dir),
             str(platform.current_dir / 'bin'),
+            'bin',
             "${PATH}"
         ]
     }
@@ -383,6 +385,7 @@ def generate_csources(platform):
         'PATH': [
             str(platform.current_dir),
             str(platform.current_dir / 'bin'),
+            'bin',
             "${PATH}"
         ]
     }
@@ -408,6 +411,7 @@ def generate_zip(platform):
         'PATH': [
             str(platform.current_dir),
             str(platform.current_dir / 'bin'),
+            'bin',
             "${PATH}"
         ]
     }
@@ -433,6 +437,7 @@ def generate_installer(platform):
         'PATH': [
             str(platform.current_dir),
             str(platform.current_dir / 'bin'),
+            'bin',
             "${PATH}"
         ]
     }
