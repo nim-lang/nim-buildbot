@@ -264,7 +264,6 @@ c['schedulers'] = [
         name="force-build-scheduler",
         builderNames=all_builder_names,
         buttonName="Force Compiler Build",
-        label='Manual Compiler Build',
         properties=[]
     )
 ]
