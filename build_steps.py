@@ -7,6 +7,7 @@ from buildbot.process.properties import Property
 
 # Constants
 python_exe_property_name = 'python_exe'
+dir_command_property_name = 'dir_command'
 run_cpp_builds_property_name = 'run_cpp_builds'
 run_release_builds_property_name = 'run_release_builds'
 hide_cpp_builds_property_name = 'hide_cpp_builds'
@@ -234,6 +235,7 @@ def compile_koch(platform):
         'PATH': [
             str(platform.current_dir),
             bin_dir,
+            'bin'
             "${PATH}"
         ]
     }
