@@ -147,7 +147,7 @@ c['slaves'] = [
     BuildSlave(
         "linux-arm5-slave-1", slave_passwords[6],
         properties={
-            python_exe_property_name: 'python27',
+            python_exe_property_name: 'python2',
             run_release_builds: False
         },
         **default_slave_params
