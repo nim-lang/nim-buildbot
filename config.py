@@ -20,72 +20,9 @@
 #
 #  - 'hide_release_builds': Whether to hide release builds. Defaults to false.
 
-import os
-from buildbot.status import html
-try:
-    # buildbot 0.8.7p1
-    from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
-    from buildbot.status.results import Results
-except ImportError:
-    # buildbot 0.8.0
-    from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
-    from buildbot.status.builder import Results
-from buildbot.status.web.base import HtmlResource
-
-class BuildStatusImageResource(HtmlResource):
-    contentType = "image/svg+xml"
-
-    def __init__(self, categories=None):
-        HtmlResource.__init__(self)
-
-    def content(self, request, ctx):
-        """Display a build status image like Travis does."""
-
-        status = self.getStatus(request)
-        request.setHeader('Cache-Control', 'no-cache')
-
-        # Get the parameters.
-        name = request.args.get("builder", [None])[0]
-        number = request.args.get("number", [None])[0]
-        if not name:
-            return "builder parameter missing"
-        if not number:
-            number = -1
-        else:
-            number = int(number)
-
-        # Check if the builder in parameter exists.
-        try:
-            builder = status.getBuilder(name)
-        except NameError:
-            return "unknown builder"
-
-        # Check if the build in parameter exists.
-        if number == -1:
-            build = builder.getLastFinishedBuild()
-        else:
-            build = builder.getBuild(int(number))
-        if not build:
-            return "unknown build %s" % number
-
-        #SUCCESS, WARNINGS, FAILURE, SKIPPED or EXCEPTION
-        res = build.getResults()
-        resname = Results[res]
-
-        img = 'status-img/status_image_%s.svg' % resname
-        here = os.path.dirname(__file__)
-        imgfile = os.path.join(here, img)
-
-        imgcontent = open(imgfile, 'rb').read()
-
-        return imgcontent
-
-class BuildStatusIconWebStatus(html.WebStatus):
-    def setupUsualPages(self, numbuilds, num_events, num_events_max):
-        html.WebStatus.setupUsualPages(self, numbuilds, num_events, num_events_max)
-        self.putChild("buildstatusimage", BuildStatusImageResource())
 
 # Global Configuration
+import os
 from build_steps import construct_nim_build, python_exe_property_name
 
 # Main configuration dictionary.
@@ -93,14 +30,17 @@ c = BuildmasterConfig = {}
 
 
 # Buildslave Configuration
+# Build slaves are remote servers used by the build master to perform remote
+# actions, such as running a build.
+# All build slaves *must* have a name of the format:
+#    "{operating system}-{architecture}-slave-{slave number}"
+#
+# This allows for automatic categorization into various variables.
+
 from buildbot.buildslave import BuildSlave
 from infostore import slave_passwords
-# Build slaves controlled by the master server
-# We use at least two slaves for each platform - a 32 bit slave, and a 64-bit
-# slave.
 
-default_slave_params = {
-}
+default_slave_params = {}
 
 c['slaves'] = [
     # Windows slaves
@@ -131,6 +71,15 @@ c['slaves'] = [
     ),
 
 
+    BuildSlave(
+        "linux-arm5-slave-1", slave_passwords[6],
+        properties={
+            python_exe_property_name: 'python2',
+            'run_release_builds': False
+        },
+        **default_slave_params
+    ),
+
     # Mac slaves
     BuildSlave(
         "mac-x64-slave-1", slave_passwords[4],
@@ -142,15 +91,6 @@ c['slaves'] = [
         "mac-x32-slave-1", slave_passwords[5],
         properties={},
         **default_slave_params
-    ),
-
-    BuildSlave(
-        "linux-arm5-slave-1", slave_passwords[6],
-        properties={
-            python_exe_property_name: 'python2',
-            'run_release_builds': False
-        },
-        **default_slave_params
     )
 ]
 
@@ -158,7 +98,6 @@ all_slave_names = [slave.name for slave in c['slaves']]
 
 
 # PROTOCOLS
-
 # 'protocols' contains information about protocols which master will use for
 # communicating with slaves.
 # You must define at least 'port' option that slaves could connect to your
@@ -170,11 +109,11 @@ c['protocols'] = {'pb': {'port': 9989}}
 
 
 # CHANGESOURCES
-from buildbot.changes.pb import PBChangeSource
-from infostore import change_source_credentials
-
 # List of sources to retrieve change notifications from.
 # We get our sources from notifications sent by the github hook bot on a port.
+
+from buildbot.changes.pb import PBChangeSource
+from infostore import change_source_credentials
 
 c['change_source'] = [
     PBChangeSource(
@@ -185,9 +124,9 @@ c['change_source'] = [
 
 
 # BUILDERS
-from buildbot.config import BuilderConfig
-
 # List of builds and their build steps
+
+from buildbot.config import BuilderConfig
 
 c['builders'] = [
     BuilderConfig(
@@ -252,14 +191,21 @@ all_builder_names = [builder.name for builder in c['builders']]
 
 
 # SCHEDULERS
-from buildbot.schedulers.basic import AnyBranchScheduler
-from buildbot.schedulers.forcesched import ForceScheduler
-
 # Configure the Schedulers, which decide how to react to incoming changes.
+
+from buildbot.schedulers.basic import AnyBranchScheduler
+from buildbot.schedulers.triggerable import TriggerableScheduler
+from buildbot.schedulers.forcesched import ForceScheduler
 
 c['schedulers'] = [
     # Main scheduler, activated when a branch in the Nim repository is changed.
     AnyBranchScheduler(
+        name="git-build-scheduler",
+        treeStableTimer=None,
+        builderNames=all_builder_names
+    ),
+
+    TriggerableScheduler(
         name="git-build-scheduler",
         treeStableTimer=None,
         builderNames=all_builder_names
@@ -277,9 +223,86 @@ c['schedulers'] = [
 
 
 # STATUS TARGETS
+# Set up the various target for build status.
+# In particular, we set up a page to handle requests for individual test
+# results, as well as a page to handle retrieving build status badges
 from buildbot.status import html
 from buildbot.status.web import authz, auth
+from buildbot.status.builder import Results
+from buildbot.status.web.base import HtmlResource
+
 from infostore import user_credentials
+
+# Set up the custom build status
+
+
+class BuilderResource(HtmlResource):
+
+    """
+    Helper class for per-builder resources
+    """
+
+    def content(self, request, ctx):
+        """Display a build status image like Travis does."""
+        status = self.getStatus(request)
+
+        # Get the parameters.
+        name = request.args.get('builder', (None,))[0]
+        number = request.args.get('number', (None,))[0]
+        if name is None:
+            return 'builder parameter missing'
+
+        # Check if the builder in parameter exists.
+        try:
+            builder = status.getBuilder(name)
+        except NameError:
+            return "invalid builder '%s'" % builder
+
+        # Check if the given build is valid
+        if number is not None:
+            try:
+                number = int(number)
+            except ValueError:
+                return "invalid build number '%s'" % number
+
+        # Check if the given build exists.
+        if number == -1 or number is None:
+            build = builder.getLastFinishedBuild()
+        else:
+            build = builder.getBuild(int(number))
+        if not build:
+            return "unknown build number '%s'" % number
+
+        return self.content_hook(self, request, ctx, builder, build, number)
+
+
+class StatusImageResource(BuilderResource):
+    contentType = 'image/svg+xml'
+
+    def content_hook(self, request, ctx, builder, build, number):
+        """Display a build status image like Travis does."""
+        request.setHeader('Cache-Control', 'no-cache')
+
+        #SUCCESS, WARNINGS, FAILURE, SKIPPED or EXCEPTION
+        res = build.getResults()
+        resname = Results[res]
+
+        img = 'status-img/status_image_%s.svg' % resname
+        here = os.path.dirname(__file__)
+        imgfile = os.path.join(here, img)
+
+        imgcontent = open(imgfile, 'rb').read()
+
+        return imgcontent
+
+
+class NimBuildStatus(html.WebStatus):
+
+    def setupUsualPages(self, numbuilds, num_events, num_events_max):
+        html.WebStatus.setupUsualPages(
+            self, numbuilds, num_events, num_events_max)
+        self.putChild("buildstatusimage", StatusImageResource())
+
 
 # 'status' is a list of Status Targets. The results of each build will be
 # pushed to these targets. buildbot/status/*.py has a variety to choose from,
@@ -299,7 +322,7 @@ authz_cfg = authz.Authz(
     stopAllBuilds='auth',
     cancelPendingBuild='auth',
 )
-c['status'].append(BuildStatusIconWebStatus(http_port=8010, authz=authz_cfg))
+c['status'].append(NimBuildStatus(http_port=8010, authz=authz_cfg))
 
 
 # PROJECT IDENTITY

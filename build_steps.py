@@ -2,8 +2,13 @@ from pathlib import PureWindowsPath, PurePosixPath
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source.git import Git
 from buildbot.steps.shell import ShellCommand
+from buildbot.steps.transfer import FileUpload
+from buildbot.steps.master import MasterShellCommand
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Property
+from buildbot.plugins.util import Interpolate
+
+from infostore import web_url
 
 # Constants
 python_exe_property_name = 'python_exe'
@@ -362,6 +367,7 @@ def run_testament(platform):
             "${PATH}"
         ]
     }
+    test_destination = 'build_tests/%(prop:buildername)s/test-%(prop:buildnumber)s.html'
 
     return [
         ShellCommand(
@@ -375,6 +381,17 @@ def run_testament(platform):
             env=base_env,
             haltOnFailure=True,
             timeout=21600
+        ),
+
+        MasterShellCommand(
+            command=['mkdir', '-p', Interpolate('"{0}"'.format(test_destination))],
+            workdir="public_html"
+        ),
+
+        FileUpload(
+            slavesrc=str(platform.nim_dir / 'testresults.html'),
+            masterdest=Interpolate(test_destination),
+            url=Interpolate(web_url + test_destination)
         )
     ]
 
