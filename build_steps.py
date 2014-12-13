@@ -365,7 +365,8 @@ def run_testament(platform):
             "${PATH}"
         ]
     }
-    test_destination = 'build_tests/%(prop:buildername)s/test-%(prop:buildnumber)s.html'
+    test_destination = 'build_tests/%(prop:buildername)s/'
+    test_file = 'test-%(prop:buildnumber)s.html'
 
     return [
         ShellCommand(
@@ -388,8 +389,8 @@ def run_testament(platform):
 
         FileUpload(
             slavesrc=str(platform.nim_dir / 'testresults.html'),
-            masterdest=Interpolate(test_destination),
-            url=Interpolate(web_url + test_destination)
+            masterdest=Interpolate(test_destination + test_file),
+            url=Interpolate(web_url + test_destination + test_file)
         )
     ]
 
