@@ -194,7 +194,7 @@ all_builder_names = [builder.name for builder in c['builders']]
 # Configure the Schedulers, which decide how to react to incoming changes.
 
 from buildbot.schedulers.basic import AnyBranchScheduler
-from buildbot.schedulers.triggerable import TriggerableScheduler
+from buildbot.schedulers.triggerable import Triggerable as TriggerableScheduler
 from buildbot.schedulers.forcesched import ForceScheduler
 
 c['schedulers'] = [
