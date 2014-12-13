@@ -205,12 +205,6 @@ c['schedulers'] = [
         builderNames=all_builder_names
     ),
 
-    TriggerableScheduler(
-        name="git-build-scheduler",
-        treeStableTimer=None,
-        builderNames=all_builder_names
-    ),
-
     # Force-build scheduler, activated when its button is clicked on the
     # build admins page.
     ForceScheduler(
