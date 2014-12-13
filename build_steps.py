@@ -383,7 +383,7 @@ def run_testament(platform):
 
         MasterShellCommand(
             command=['mkdir', '-p', Interpolate('"{0}"'.format(test_destination))],
-            workdir="public_html"
+            path="public_html"
         ),
 
         FileUpload(
