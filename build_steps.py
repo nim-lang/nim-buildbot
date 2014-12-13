@@ -5,9 +5,7 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileUpload
 from buildbot.steps.master import MasterShellCommand
 from buildbot.process.factory import BuildFactory
-from buildbot.process.properties import Property
-from buildbot.plugins.util import Interpolate
-
+from buildbot.process.properties import Property, Interpolate
 from infostore import web_url
 
 # Constants
