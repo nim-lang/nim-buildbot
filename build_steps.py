@@ -385,7 +385,7 @@ def run_testament(platform):
         FileUpload(
             slavesrc=str('testresults.html'),
             masterdest=Interpolate('public_html/' + test_destination + test_file),
-            url=Interpolate(web_url + test_destination + test_file),
+            url=Interpolate(test_destination + test_file),
             haltOnFailure=False
         )
     ]
