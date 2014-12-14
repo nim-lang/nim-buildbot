@@ -392,14 +392,10 @@ def run_testament(platform):
 
         MasterShellCommand(
             command=['mkdir', '-p', Interpolate(test_directory)],
-            path="public_html",
-            hideStepIf=True
+            path="public_html"
         ),
 
         FileUpload(
-            name='Upload HTML Test Results',
-            descriptionSuffix=' HTML Test Results',
-
             slavesrc=html_test_results,
             workdir=str(platform.nim_dir),
             masterdest=Interpolate(test_directory + html_test_results_dest),
@@ -407,9 +403,6 @@ def run_testament(platform):
         ),
 
         FileUpload(
-            name='Upload Test Results Database',
-            descriptionSuffix=' Test Results Database',
-
             slavesrc=db_test_results,
             workdir=str(platform.nim_dir),
             masterdest=Interpolate(test_directory + db_test_results_dest),
