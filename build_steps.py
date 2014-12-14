@@ -382,29 +382,9 @@ def run_testament(platform):
             timeout=21600
         ),
 
-        MasterShellCommand(
-            command=['mkdir', '-p', Interpolate(test_destination)],
-            path="public_html",
-            hideStepIf=True
-        ),
-
-        FileUpload(
-            slavesrc=str(platform.nim_dir / 'testresults.html'),
-            masterdest=Interpolate(test_destination + test_file),
-            url=Interpolate(web_url + test_destination + test_file),
-            haltOnFailure=False
-        ),
-
-        FileUpload(
-            slavesrc=str('build/testresults.html'),
-            masterdest=Interpolate(test_destination + test_file),
-            url=Interpolate(web_url + test_destination + test_file),
-            haltOnFailure=False
-        ),
-
         FileUpload(
             slavesrc=str('testresults.html'),
-            masterdest=Interpolate(test_destination + test_file),
+            masterdest=Interpolate('public_html/' + test_destination + test_file),
             url=Interpolate(web_url + test_destination + test_file),
             haltOnFailure=False
         )
