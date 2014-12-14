@@ -367,7 +367,9 @@ def run_testament(platform):
             "${PATH}"
         ]
     }
-    test_directory = 'test-data/%(prop:buildername)s-%(prop:revision)s'
+    test_url = 'test-data/%(prop:buildername)s-%(prop:revision)s/'
+    test_directory = 'public_html/' + test_url
+
     html_test_results = 'testresults.html'
     html_test_results_dest = genDest(html_test_results)
     db_test_results = 'testament.db'
@@ -393,16 +395,8 @@ def run_testament(platform):
 
             slavesrc=html_test_results,
             workdir=str(platform.nim_dir),
-            masterdest=Interpolate(
-                '/'.join(
-                    ('public_html', test_directory, html_test_results_dest)
-                )
-            ),
-            url=Interpolate(
-                '/'.join(
-                    (test_directory, html_test_results_dest)
-                )
-            )
+            masterdest=Interpolate(test_directory + html_test_results_dest),
+            url=Interpolate(test_url + html_test_results_dest)
         ),
 
         FileUpload(
@@ -411,16 +405,8 @@ def run_testament(platform):
 
             slavesrc=db_test_results,
             workdir=str(platform.nim_dir),
-            masterdest=Interpolate(
-                '/'.join(
-                    ('public_html', test_directory, db_test_results_dest)
-                )
-            ),
-            url=Interpolate(
-                '/'.join(
-                    (test_directory, db_test_results_dest)
-                )
-            )
+            masterdest=Interpolate(test_directory + db_test_results_dest),
+            url=Interpolate(test_url + db_test_results_dest)
         )
     ]
 

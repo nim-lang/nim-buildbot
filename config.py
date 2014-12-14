@@ -281,7 +281,7 @@ class StatusImageResource(BuilderResource):
         res = build.getResults()
         resname = Results[res]
 
-        img = 'status-img/status_image_%s.svg' % resname
+        img = 'public_html/status-img/status_image_%s.svg' % resname
         here = os.path.dirname(__file__)
         imgfile = os.path.join(here, img)
 
