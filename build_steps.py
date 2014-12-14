@@ -3,10 +3,8 @@ from buildbot.status.results import SUCCESS
 from buildbot.steps.source.git import Git
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileUpload
-from buildbot.steps.master import MasterShellCommand
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Property, Interpolate
-from infostore import web_url
 
 # Constants
 python_exe_property_name = 'python_exe'
@@ -44,6 +42,11 @@ def step_has_properties(property_names, default=None, takesResults=False,
         return lambda results, s: check_for_property(s)
     else:
         return check_for_property
+
+
+def genDest(s):
+    a, b = s.rsplit('.')
+    return '{0}-%(prop:buildnumber)s.{1}'.format(s.rsplit('.'))
 
 
 # Git Urls
@@ -365,8 +368,11 @@ def run_testament(platform):
             "${PATH}"
         ]
     }
-    test_destination = 'build_tests/%(prop:buildername)s/'
-    test_file = 'test-%(prop:buildnumber)s.html'
+    test_directory = 'test-data/%(prop:buildername)s-%(prop:revision)s'
+    html_test_results = 'testresults.html'
+    html_test_results_dest = genDest(html_test_results)
+    db_test_results = 'testament.db'
+    db_test_results_dest = genDest(db_test_results)
 
     return [
         ShellCommand(
@@ -383,10 +389,39 @@ def run_testament(platform):
         ),
 
         FileUpload(
-            slavesrc=str('testresults.html'),
-            masterdest=Interpolate('public_html/' + test_destination + test_file),
-            url=Interpolate(test_destination + test_file),
-            haltOnFailure=False
+            name='Upload HTML Test Results',
+            descriptionSuffix=' HTML Test Results',
+
+            slavesrc=html_test_results,
+            workdir=str(platform.nim_dir),
+            masterdest=Interpolate(
+                '/'.join(
+                    ('public_html', test_directory, html_test_results_dest)
+                )
+            ),
+            url=Interpolate(
+                '/'.join(
+                    (test_directory, html_test_results_dest)
+                )
+            )
+        ),
+
+        FileUpload(
+            name='Upload Test Results Database',
+            descriptionSuffix=' Test Results Database',
+
+            slavesrc=db_test_results,
+            workdir=str(platform.nim_dir),
+            masterdest=Interpolate(
+                '/'.join(
+                    ('public_html', test_directory, db_test_results_dest)
+                )
+            ),
+            url=Interpolate(
+                '/'.join(
+                    (test_directory, db_test_results_dest)
+                )
+            )
         )
     ]
 
