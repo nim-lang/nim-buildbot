@@ -267,7 +267,7 @@ class BuilderResource(HtmlResource):
         if not build:
             return "unknown build number '%s'" % number
 
-        return self.content_hook(self, request, ctx, builder, build, number)
+        return self.content_hook(request, ctx, builder, build, number)
 
 
 class StatusImageResource(BuilderResource):

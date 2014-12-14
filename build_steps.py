@@ -391,7 +391,22 @@ def run_testament(platform):
         FileUpload(
             slavesrc=str(platform.nim_dir / 'testresults.html'),
             masterdest=Interpolate(test_destination + test_file),
-            url=Interpolate(web_url + test_destination + test_file)
+            url=Interpolate(web_url + test_destination + test_file),
+            haltOnFailure=False
+        ),
+
+        FileUpload(
+            slavesrc=str('build/testresults.html'),
+            masterdest=Interpolate(test_destination + test_file),
+            url=Interpolate(web_url + test_destination + test_file),
+            haltOnFailure=False
+        ),
+
+        FileUpload(
+            slavesrc=str('testresults.html'),
+            masterdest=Interpolate(test_destination + test_file),
+            url=Interpolate(web_url + test_destination + test_file),
+            haltOnFailure=False
         )
     ]
 
