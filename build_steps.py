@@ -45,8 +45,7 @@ def step_has_properties(property_names, default=None, takesResults=False,
 
 
 def genDest(s):
-    a, b = s.rsplit('.')
-    return '{0}-%(prop:buildnumber)s.{1}'.format(s.rsplit('.'))
+    return '{0}-%(prop:buildnumber)s.{1}'.format(*s.rsplit('.'))
 
 
 # Git Urls
