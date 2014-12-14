@@ -5,6 +5,7 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileUpload
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Property, Interpolate
+from buildbot.steps.master import MasterShellCommand
 
 # Constants
 python_exe_property_name = 'python_exe'
@@ -387,6 +388,12 @@ def run_testament(platform):
             env=base_env,
             haltOnFailure=True,
             timeout=21600
+        ),
+
+        MasterShellCommand(
+            command=['mkdir', '-p', Interpolate(test_directory)],
+            path="public_html",
+            hideStepIf=True
         ),
 
         FileUpload(
