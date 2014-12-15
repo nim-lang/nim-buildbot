@@ -225,6 +225,8 @@ from buildbot.status.web import authz, auth
 from buildbot.status.builder import Results
 from buildbot.status.web.base import HtmlResource
 
+from twisted.web.static import File
+
 from infostore import user_credentials
 
 # Set up the custom build status
@@ -293,6 +295,8 @@ class StatusImageResource(BuilderResource):
 class NimBuildStatus(html.WebStatus):
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
+        File.contentTypes[".db"] = "application/x-sqlite3"
+
         html.WebStatus.setupUsualPages(
             self, numbuilds, num_events, num_events_max)
         self.putChild("buildstatusimage", StatusImageResource())
