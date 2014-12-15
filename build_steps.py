@@ -368,7 +368,7 @@ def run_testament(platform):
             "${PATH}"
         ]
     }
-    test_url = 'test-data/%(prop:buildername)s-%(prop:revision)s/'
+    test_url = 'test-data/%(prop:buildername)s/%(prop:got_revision)s/'
     test_directory = 'public_html/' + test_url
 
     html_test_results = 'testresults.html'
@@ -392,7 +392,8 @@ def run_testament(platform):
 
         MasterShellCommand(
             command=['mkdir', '-p', Interpolate(test_directory)],
-            path="public_html"
+            path="public_html",
+            hideStepIf=True
         ),
 
         FileUpload(
