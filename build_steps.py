@@ -4,7 +4,7 @@ from buildbot.steps.source.git import Git
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileUpload
 from buildbot.process.factory import BuildFactory
-from buildbot.process.properties import Property, Interpolate
+from buildbot.process.properties import Property, Interpolate, renderer
 from buildbot.steps.master import MasterShellCommand
 
 # Constants
@@ -367,10 +367,12 @@ def boot_nimrod(platform):
         )
     ]
 
+
 def FormatInterpolate(format_string):
     @renderer
     def render_revision(props):
         return format_string.format(**props)
+
 
 @inject_paths
 def run_testament(platform):
@@ -413,14 +415,16 @@ def run_testament(platform):
         FileUpload(
             slavesrc=html_test_results,
             workdir=str(platform.nim_dir),
-            masterdest=FormatInterpolate(test_directory + html_test_results_dest),
+            masterdest=FormatInterpolate(
+                test_directory + html_test_results_dest),
             url=FormatInterpolate(test_url + html_test_results_dest)
         ),
 
         FileUpload(
             slavesrc=db_test_results,
             workdir=str(platform.nim_dir),
-            masterdest=FormatInterpolate(test_directory + db_test_results_dest),
+            masterdest=FormatInterpolate(
+                test_directory + db_test_results_dest),
             url=FormatInterpolate(test_url + db_test_results_dest)
         )
     ]
