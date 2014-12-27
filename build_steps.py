@@ -368,7 +368,7 @@ def boot_nimrod(platform):
     ]
 
 def FormatInterpolate(format_string):
-    @util.renderer
+    @renderer
     def render_revision(props):
         return format_string.format(**props)
 
