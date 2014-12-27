@@ -45,14 +45,24 @@ def step_has_properties(property_names, default=None, takesResults=False,
         return check_for_property
 
 
-def genDest(s):
+def gen_dest_filename(s):
     return '{0}-%(prop:buildnumber)s.{1}'.format(*s.rsplit('.'))
 
 
-# Git Urls
+# Git Repositories
 nim_git_url = 'git://github.com/Araq/Nimrod'
 csources_git_url = 'git://github.com/nimrod-code/csources'
 scripts_git_url = 'git://github.com/nimrod-code/nim-buildbot'
+
+repositories = {
+    nim_git_url: 'git',
+    csources_git_url: 'csources',
+    scripts_git_url: 'scripts'
+}
+
+
+def get_codebase(change_dict):
+    return repositories[change_dict['repository']]
 
 
 # Resource directories
@@ -357,6 +367,10 @@ def boot_nimrod(platform):
         )
     ]
 
+def FormatInterpolate(format_string):
+    @util.renderer
+    def render_revision(props):
+        return format_string.format(**props)
 
 @inject_paths
 def run_testament(platform):
@@ -368,13 +382,13 @@ def run_testament(platform):
             "${PATH}"
         ]
     }
-    test_url = 'test-data/%(prop:buildername)s/%(prop:got_revision)s/'
+    test_url = "test-data/{buildername}/{got_revision[nim]})/"
     test_directory = 'public_html/' + test_url
 
     html_test_results = 'testresults.html'
-    html_test_results_dest = genDest(html_test_results)
+    html_test_results_dest = gen_dest_filename(html_test_results)
     db_test_results = 'testament.db'
-    db_test_results_dest = genDest(db_test_results)
+    db_test_results_dest = gen_dest_filename(db_test_results)
 
     return [
         ShellCommand(
@@ -399,15 +413,15 @@ def run_testament(platform):
         FileUpload(
             slavesrc=html_test_results,
             workdir=str(platform.nim_dir),
-            masterdest=Interpolate(test_directory + html_test_results_dest),
-            url=Interpolate(test_url + html_test_results_dest)
+            masterdest=FormatInterpolate(test_directory + html_test_results_dest),
+            url=FormatInterpolate(test_url + html_test_results_dest)
         ),
 
         FileUpload(
             slavesrc=db_test_results,
             workdir=str(platform.nim_dir),
-            masterdest=Interpolate(test_directory + db_test_results_dest),
-            url=Interpolate(test_url + db_test_results_dest)
+            masterdest=FormatInterpolate(test_directory + db_test_results_dest),
+            url=FormatInterpolate(test_url + db_test_results_dest)
         )
     ]
 

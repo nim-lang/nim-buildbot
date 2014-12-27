@@ -23,10 +23,14 @@
 
 # Global Configuration
 import os
-from build_steps import construct_nim_build, python_exe_property_name
+from build_steps import construct_nim_build, python_exe_property_name, get_codebase
 
 # Main configuration dictionary.
 c = BuildmasterConfig = {}
+
+
+# Codebase configuration
+c['codebaseGenerator'] = get_codebase
 
 
 # Buildslave Configuration
@@ -338,7 +342,7 @@ c['titleURL'] = "http://nimrod-lang.org"
 # with an externally-visible host name which the buildbot cannot figure out
 # without some help.
 
-c['buildbotURL'] = "http://build.nim-lang.org:8010/"
+c['buildbotURL'] = "http://build.nim-lang.org"
 
 # DB URL
 
