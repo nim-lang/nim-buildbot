@@ -85,7 +85,16 @@ c['slaves'] = [
     ),
 
     BuildSlave(
-        "linux-arm6-slave-1", slave_passwords[6],
+        "linux-arm6-slave-1", slave_passwords[7],
+        properties={
+            python_exe_property_name: 'python2',
+            'run_release_builds': False
+        },
+        **default_slave_params
+    ),
+
+    BuildSlave(
+        "linux-arm7-slave-1", slave_passwords[8],
         properties={
             python_exe_property_name: 'python2',
             'run_release_builds': False
