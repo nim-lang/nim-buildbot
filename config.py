@@ -216,6 +216,15 @@ c['builders'] = [
             platform='linux'
         )
     ),
+
+    BuilderConfig(
+        name="linux-arm7-builder",
+        slavenames=["linux-arm7-slave-1"],
+        factory=construct_nim_build(
+            csources_script_cmd='sh build.sh',
+            platform='linux'
+        )
+    ),
 ]
 
 all_builder_names = [builder.name for builder in c['builders']]
