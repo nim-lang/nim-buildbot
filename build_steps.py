@@ -372,6 +372,7 @@ def FormatInterpolate(format_string):
     @renderer
     def render_revision(props):
         return format_string.format(**props)
+    return render_revision
 
 
 @inject_paths
