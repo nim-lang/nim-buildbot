@@ -371,7 +371,7 @@ def boot_nimrod(platform):
 def FormatInterpolate(format_string):
     @renderer
     def render_revision(props):
-        return format_string.format(**props)
+        return format_string.format(**props.properties)
     return render_revision
 
 
@@ -385,7 +385,7 @@ def run_testament(platform):
             "${PATH}"
         ]
     }
-    test_url = "test-data/{buildername}/{got_revision[nim]})/"
+    test_url = "test-data/{buildername[0]}/{got_revision[0][nim]}/"
     test_directory = 'public_html/' + test_url
 
     html_test_results = 'testresults.html'
