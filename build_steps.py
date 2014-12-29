@@ -133,7 +133,7 @@ def update_utility_scripts(platform):
             alwaysUseLatest=True,
 
             workdir=str(platform.scripts_dir),
-            hideStepIf=True,
+            hideStepIf=False,
             **common_parameters
         )
     ]
