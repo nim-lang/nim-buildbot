@@ -55,7 +55,7 @@ csources_git_url = 'git://github.com/nimrod-code/csources'
 scripts_git_url = 'git://github.com/nimrod-code/nim-buildbot'
 
 repositories = {
-    nim_git_url: 'git',
+    nim_git_url: 'nim',
     csources_git_url: 'csources',
     scripts_git_url: 'scripts'
 }
