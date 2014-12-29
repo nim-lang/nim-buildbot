@@ -129,6 +129,7 @@ def update_utility_scripts(platform):
             descriptionSuffix=' Utility Scripts',
 
             repourl=scripts_git_url,
+            codebase=repositories[scripts_git_url],
             alwaysUseLatest=True,
 
             workdir=str(platform.scripts_dir),
@@ -149,16 +150,19 @@ def update_repositories(platform):
             descriptionSuffix=' Local Nim Repository',
 
             repourl=nim_git_url,
+            codebase=repositories[nim_git_url],
 
             workdir=str(platform.nim_dir),
             **common_git_parameters
         ),
+
         Git(
             name="Update Local CSources Repository",
             descriptionSuffix=' Local CSources Repository',
 
             repourl=csources_git_url,
             alwaysUseLatest=True,
+            codebase=repositories[csources_git_url],
 
             workdir=str(platform.csources_dir),
             **common_git_parameters
