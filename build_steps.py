@@ -46,7 +46,7 @@ def step_has_properties(property_names, default=None, takesResults=False,
 
 
 def gen_dest_filename(s):
-    return '{1}-{0}.{2}'.format('{buildnumber}', *s.rsplit('.'))
+    return '{1}-{0}.{2}'.format('{buildnumber[0]}', *s.rsplit('.'))
 
 
 # Git Repositories
