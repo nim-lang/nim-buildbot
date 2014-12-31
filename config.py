@@ -140,7 +140,7 @@ from infostore import change_source_credentials
 c['change_source'] = [
     PBChangeSource(
         user=change_source_credentials[0][0],
-        passwd=change_source_credentials[0][1]
+        passwd=change_source_credentials[0][1],
     )
 ]
 
@@ -234,7 +234,6 @@ all_builder_names = [builder.name for builder in c['builders']]
 # Configure the Schedulers, which decide how to react to incoming changes.
 
 from buildbot.schedulers.basic import AnyBranchScheduler
-from buildbot.schedulers.triggerable import Triggerable as TriggerableScheduler
 from buildbot.schedulers.forcesched import ForceScheduler
 
 c['schedulers'] = [
@@ -242,7 +241,12 @@ c['schedulers'] = [
     AnyBranchScheduler(
         name="git-build-scheduler",
         treeStableTimer=None,
-        builderNames=all_builder_names
+        builderNames=all_builder_names,
+        codebases={
+            'nim': {'repository': ''},
+            'csources': {'repository': ''},
+            'scripts': {'repository': ''},
+        }
     ),
 
     # Force-build scheduler, activated when its button is clicked on the
@@ -251,7 +255,12 @@ c['schedulers'] = [
         name="force-build-scheduler",
         builderNames=all_builder_names,
         buttonName="Force Compiler Build",
-        properties=[]
+        properties=[],
+        codebases={
+            'nim': {'repository': ''},
+            'csources': {'repository': ''},
+            'scripts': {'repository': ''},
+        }
     )
 ]
 
