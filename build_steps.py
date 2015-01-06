@@ -50,9 +50,9 @@ def gen_dest_filename(s):
 
 
 # Git Repositories
-nim_git_url = 'git://github.com/Araq/Nim'
-csources_git_url = 'git://github.com/nimrod-code/csources'
-scripts_git_url = 'git://github.com/nimrod-code/nim-buildbot'
+nim_git_url = 'https://github.com/Araq/Nim'
+csources_git_url = 'https://github.com/nimrod-code/csources'
+scripts_git_url = 'https://github.com/nimrod-code/nim-buildbot'
 
 repositories = {
     nim_git_url: 'nim',
