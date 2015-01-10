@@ -408,7 +408,7 @@ def run_testament(platform):
             workdir=str(platform.nim_dir),
             env=base_env,
             haltOnFailure=True,
-            timeout=21600
+            timeout=None
         ),
 
         MasterShellCommand(
