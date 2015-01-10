@@ -1,5 +1,4 @@
 from pathlib import PureWindowsPath, PurePosixPath
-from buildbot.status.results import SUCCESS
 from buildbot.steps.source.git import Git
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileUpload
@@ -8,19 +7,52 @@ from buildbot.process.properties import Property, Interpolate, renderer
 from buildbot.steps.master import MasterShellCommand
 
 # Constants
-python_exe_property_name = 'python_exe'
-dir_command_property_name = 'dir_command'
-run_cpp_builds_property_name = 'run_cpp_builds'
-run_release_builds_property_name = 'run_release_builds'
-hide_cpp_builds_property_name = 'hide_cpp_builds'
-hide_release_builds_property_name = 'hide_release_builds'
 
-python_exe = Property('python_exe', default='python')
+# Properties
+python_exe_prop          = Property('python_exe', default='python')
+dir_command_prop         = Property('dir_command')
+run_cpp_builds_prop      = Property('run_cpp_builds')
+run_release_builds_prop  = Property('run_release_builds')
+hide_cpp_builds_prop     = Property('hide_cpp_builds')
+hide_release_builds_prop = Property('hide_release_builds')
+
+# Git Repositories
+nim_git_url      = 'https://github.com/Araq/Nim'
+csources_git_url = 'https://github.com/nimrod-code/csources'
+scripts_git_url  = 'https://github.com/nimrod-code/nim-buildbot'
+
+repositories = {
+    nim_git_url      : 'nim',
+    csources_git_url : 'csources',
+    scripts_git_url  : 'scripts'
+}
+
+# Resource Directories
+resource_dirs = {
+    'current_dir'  : './',
+    'nim_dir'      : 'build/',
+    'csources_dir' : 'build/csources/',
+    'scripts_dir'  : 'scripts/',
+    'tester_dir'   : 'tests/testament/',
+    'compiler_dir' : 'compiler'
+}
+
+# Common Build Step Parameters
+common_git_parameters = {
+    'haltOnFailure'     : True,
+    'description'      : 'Updating',
+    'descriptionDone'  : 'Updated',
+    'mode'             : 'incremental',
+    'retry'            : (10, 20),
+    'progress'         : True,
+    'clobberOnFailure' : True
+}
 
 
-def step_has_property(property_name, default=None, takesResults=False):
+# Utility Functions
+def step_has_property(name, default=None, takesResults=False):
     def check_for_property(step):
-        result = step.getProperty(property_name)
+        result = step.getProperty(name)
         if result is None:
             return default
         else:
@@ -31,15 +63,14 @@ def step_has_property(property_name, default=None, takesResults=False):
         return check_for_property
 
 
-def step_has_properties(property_names, default=None, takesResults=False,
-                        sentinal=None):
+def step_has_properties(names, default=None, giveResults=False, sentinal=None):
     def check_for_property(step):
-        for name in property_names:
+        for name in names:
             result = step.getProperty(name)
             if result is not sentinal:
                 return result
         return default
-    if takesResults:
+    if giveResults:
         return lambda results, s: check_for_property(s)
     else:
         return check_for_property
@@ -49,33 +80,11 @@ def gen_dest_filename(s):
     return '{1}-{0}.{2}'.format('{buildnumber[0]}', *s.rsplit('.'))
 
 
-# Git Repositories
-nim_git_url = 'https://github.com/Araq/Nim'
-csources_git_url = 'https://github.com/nimrod-code/csources'
-scripts_git_url = 'https://github.com/nimrod-code/nim-buildbot'
-
-repositories = {
-    nim_git_url: 'nim',
-    csources_git_url: 'csources',
-    scripts_git_url: 'scripts'
-}
-
-
 def get_codebase(change_dict):
     return repositories[change_dict['repository']]
 
 
-# Resource directories
-resource_dirs = {
-    'current_dir': './',
-    'nim_dir': 'build/',
-    'csources_dir': 'build/csources/',
-    'scripts_dir': 'scripts/',
-    'tester_dir': 'tests/testament/',
-    'compiler_dir': 'compiler'
-}
-
-
+# Cross-Platform Environment Calculation
 class PlatformPaths:
     pass
 windows_directories = PlatformPaths()
@@ -83,9 +92,16 @@ posix_directories = PlatformPaths()
 for key, value in resource_dirs.iteritems():
     setattr(windows_directories, key, PureWindowsPath(value))
     setattr(posix_directories, key, PurePosixPath(value))
+for platform in [windows_directories, posix_directories]:
+    platform.base_env = {
+        'PATH': [
+            str(platform.current_dir),
+            str(platform.current_dir / 'bin'),
+            'bin',
+            "${PATH}"
+        ]
+    }
 
-
-# Utility Functions
 
 def inject_paths(func):
     def wrapper(platform, *args, **kwargs):
@@ -95,25 +111,8 @@ def inject_paths(func):
         return func(platform_directories, *args, **kwargs)
     return wrapper
 
-has_passed = lambda results, step: results == SUCCESS
 
 # Build Steps
-
-# Common build step parameters
-common_git_parameters = {
-    'haltOnFailure': True,
-    'description': 'Updating',
-    'descriptionDone': 'Updated',
-
-    'mode': 'incremental',
-    'retry': (10, 20),
-
-    'progress': True,
-    'clobberOnFailure': True
-}
-
-# Steps
-
 
 @inject_paths
 def update_utility_scripts(platform):
@@ -125,15 +124,13 @@ def update_utility_scripts(platform):
 
     return [
         Git(
-            name="Update Utility Scripts",
-            descriptionSuffix=' Utility Scripts',
-
-            repourl=scripts_git_url,
-            codebase=repositories[scripts_git_url],
-            alwaysUseLatest=True,
-
-            workdir=str(platform.scripts_dir),
-            hideStepIf=False,
+            name              = "Update Utility Scripts",
+            descriptionSuffix = ' Utility Scripts',
+            repourl           = scripts_git_url,
+            codebase          = repositories[scripts_git_url],
+            workdir           = str(platform.scripts_dir),
+            alwaysUseLatest   = True,
+            hideStepIf        = False,
             **common_parameters
         )
     ]
@@ -146,25 +143,21 @@ def update_repositories(platform):
     """
     return [
         Git(
-            name="Update Local Nim Repository",
-            descriptionSuffix=' Local Nim Repository',
-
-            repourl=nim_git_url,
-            codebase=repositories[nim_git_url],
-
-            workdir=str(platform.nim_dir),
+            name              = "Update Local Nim Repository",
+            descriptionSuffix = ' Local Nim Repository',
+            repourl           = nim_git_url,
+            codebase          = repositories[nim_git_url],
+            workdir           = str(platform.nim_dir),
             **common_git_parameters
         ),
 
         Git(
-            name="Update Local CSources Repository",
-            descriptionSuffix=' Local CSources Repository',
-
-            repourl=csources_git_url,
-            alwaysUseLatest=True,
-            codebase=repositories[csources_git_url],
-
-            workdir=str(platform.csources_dir),
+            name              = "Update Local CSources Repository",
+            descriptionSuffix = ' Local CSources Repository',
+            repourl           = csources_git_url,
+            codebase          = repositories[csources_git_url],
+            workdir           = str(platform.csources_dir),
+            alwaysUseLatest   = True,
             **common_git_parameters
         )
     ]
@@ -178,28 +171,27 @@ def clean_repositories(platform):
     update_repositories.
     """
     csources_filter = str(platform.csources_dir / '*')
+    nim_clean_cmd = ['git', 'clean', '-x', '-f', '-e', csources_filter, '-d']
+
     return [
         ShellCommand(
-            name='Clean Local Nim Repository',
-            description='Cleaning',
-            descriptionDone='Cleaned',
-            descriptionSuffix=' Local Nim Repository',
-
-            command=[
-                'git', 'clean', '-x', '-f', '-e', csources_filter, '-d'],
-            workdir=str(platform.nim_dir),
-            haltOnFailure=True,
+            name              = 'Clean Local Nim Repository',
+            description       = 'Cleaning',
+            descriptionDone   = 'Cleaned',
+            descriptionSuffix = ' Local Nim Repository',
+            command           = nim_clean_cmd,
+            workdir           = str(platform.nim_dir),
+            haltOnFailure     = True,
         ),
 
         ShellCommand(
-            name='Clean Local CSources Repository',
-            description='Cleaning',
-            descriptionDone='Cleaned',
-            descriptionSuffix=' Local CSources Repository',
-
-            command=['git', 'clean', '-x', '-f', '-d'],
-            workdir=str(platform.nim_dir),
-            haltOnFailure=True,
+            name              = 'Clean Local CSources Repository',
+            description       = 'Cleaning',
+            descriptionDone   = 'Cleaned',
+            descriptionSuffix = ' Local CSources Repository',
+            command           = ['git', 'clean', '-x', '-f', '-d'],
+            workdir           = str(platform.nim_dir),
+            haltOnFailure     = True,
         )
     ]
 
@@ -212,14 +204,13 @@ def build_csources(platform, csources_script_cmd):
     """
     return [
         ShellCommand(
-            name='Build Basic Nim Binary',
-            description='Building',
-            descriptionDone='Built',
-            descriptionSuffix=' Basic CSources Binary',
-
-            command=csources_script_cmd,
-            workdir=str(platform.csources_dir),
-            haltOnFailure=True,
+            name              = 'Build Basic Nim Binary',
+            description       = 'Building',
+            descriptionDone   = 'Built',
+            descriptionSuffix = ' Basic CSources Binary',
+            command           = csources_script_cmd,
+            workdir           = str(platform.csources_dir),
+            haltOnFailure     = True,
         )
     ]
 
@@ -230,17 +221,17 @@ def normalize_nim_names(platform):
     Makes sure that both a 'nim' and 'nimrod' binary are present.
     """
     bin_dir = str(platform.nim_dir / 'bin')
+    script_path = str(platform.scripts_dir / 'normalize_nim.py')
+
     return [
         ShellCommand(
-            name='Normalizing Binary Names',
-            description='Normalizing',
-            descriptionDone='Normalized',
-            descriptionSuffix=' Binary Names',
-
-            command=[python_exe, str(
-                platform.scripts_dir / 'normalize_nim.py'), bin_dir],
-            workdir=str(platform.current_dir),
-            hideStepIf=False
+            name              = 'Normalizing Binary Names',
+            description       = 'Normalizing',
+            descriptionDone   = 'Normalized',
+            descriptionSuffix = ' Binary Names',
+            command           = [python_exe_prop, script_path, bin_dir],
+            workdir           = str(platform.current_dir),
+            hideStepIf        = False
         )
     ]
 
@@ -250,27 +241,16 @@ def compile_koch(platform):
     """
     Compiles the koch utility.
     """
-    bin_dir = str(platform.nim_dir / 'bin')
-    base_env = {
-        'PATH': [
-            str(platform.current_dir),
-            bin_dir,
-            'bin',
-            "${PATH}"
-        ]
-    }
-
     return [
         ShellCommand(
-            name='Compile Koch',
-            description='Compiling',
-            descriptionDone='Compiled',
-            descriptionSuffix=' Koch Binary',
-
-            command=['nim', 'c', 'koch.nim'],
-            env=base_env,
-            workdir=str(platform.nim_dir),
-            haltOnFailure=True,
+            name              = 'Compile Koch',
+            description       = 'Compiling',
+            descriptionDone   = 'Compiled',
+            descriptionSuffix = ' Koch Binary',
+            command           = ['nim', 'c', 'koch.nim'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
         )
     ]
 
@@ -278,96 +258,91 @@ def compile_koch(platform):
 @inject_paths
 def boot_nimrod(platform):
     nimfile_dir = str(platform.compiler_dir / 'nim.nim')
-    base_env = {
-        'PATH': [
-            str(platform.current_dir),
-            str(platform.current_dir / 'bin'),
-            'bin',
-            "${PATH}"
-        ]
-    }
 
     return [
         ShellCommand(
-            name='Bootstrap Debug Version of Nim Compiler (With C Backend)',
-            description='Booting',
-            descriptionDone='Booted',
-            descriptionSuffix=' Debug Nim Compiler (With C Backend)',
-
-            command=['koch', 'boot'],
-            workdir=str(platform.nim_dir),
-            env=base_env,
-            haltOnFailure=True,
+            name              = 'Bootstrap Debug Version of Nim Compiler '
+                                '(With C Backend)',
+            description       = 'Booting',
+            descriptionDone   = 'Booted',
+            descriptionSuffix = ' Debug Nim Compiler (With C Backend)',
+            command           = ['koch', 'boot'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
         ),
 
         ShellCommand(
-            name='Bootstrap Release Version of Nim Compiler (With C Backend)',
-            description='Booting',
-            descriptionDone='Booted',
-            descriptionSuffix=' Release Nim Compiler (With C Backend)',
-
-            command=['nim', 'c', '-d:release', nimfile_dir],
-            workdir=str(platform.nim_dir),
-            env=base_env,
+            name              = 'Bootstrap Release Version of Nim Compiler '
+                                '(With C Backend)',
+            description       = 'Booting',
+            descriptionDone   = 'Booted',
+            descriptionSuffix = ' Release Nim Compiler (With C Backend)',
+            command           = ['nim', 'c', '-d:release', nimfile_dir],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = False,
 
             doStepIf=step_has_property(
-                property_name=run_release_builds_property_name,
-                default=True),
+                property_name = run_release_builds_prop.key,
+                default       = True
+            ),
             hideStepIf=step_has_property(
-                property_name=hide_release_builds_property_name,
-                default=False,
-                takesResults=True),
-            haltOnFailure=False
+                property_name = hide_release_builds_prop.key,
+                default       = False,
+                takesResults  = True
+            ),
         ),
 
         ShellCommand(
-            name='Bootstrap Debug Version of Nim Compiler (With C++ Backend)',
-            description='Booting',
-            descriptionDone='Booted',
-            descriptionSuffix=' Debug Nim Compiler (With C++ Backend)',
+            name              = 'Bootstrap Debug Version of Nim Compiler '
+                                '(With C++ Backend)',
+            description       = 'Booting',
+            descriptionDone   = 'Booted',
+            descriptionSuffix = ' Debug Nim Compiler (With C++ Backend)',
 
-            command=['nim', 'cpp', nimfile_dir],
-            workdir=str(platform.nim_dir),
-            env=base_env,
+            command           = ['nim', 'cpp', nimfile_dir],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
 
             doStepIf=step_has_property(
-                property_name=run_cpp_builds_property_name,
-                default=True
+                property_name = run_cpp_builds_prop.key,
+                default       = True
             ),
             hideStepIf=step_has_property(
-                property_name=hide_cpp_builds_property_name,
-                default=False,
-                takesResults=True
+                property_name = hide_cpp_builds_prop.key,
+                default       = False,
+                takesResults  = True
             ),
-            haltOnFailure=True
         ),
 
         ShellCommand(
-            name='Bootstrap Release Version of Nim Compiler (With C++ Backend)',
-            description='Booting',
-            descriptionDone='Booted',
-            descriptionSuffix=' Release Nim Compiler (With C++ Backend)',
-
-            command=['nim', 'cpp', '-d:release', nimfile_dir],
-            workdir=str(platform.nim_dir),
-            env=base_env,
+            name              = 'Bootstrap Release Version of Nim Compiler'
+                                '(With C++ Backend)',
+            description       = 'Booting',
+            descriptionDone   = 'Booted',
+            descriptionSuffix = ' Release Nim Compiler (With C++ Backend)',
+            command           = ['nim', 'cpp', '-d:release', nimfile_dir],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = False,
 
             doStepIf=step_has_properties(
                 property_names=[
-                    run_cpp_builds_property_name,
-                    run_release_builds_property_name
+                    run_cpp_builds_prop.key,
+                    run_release_builds_prop.key
                 ],
-                default=True
+                default = True
             ),
             hideStepIf=step_has_properties(
                 property_names=[
-                    hide_cpp_builds_property_name,
-                    hide_release_builds_property_name
+                    hide_cpp_builds_prop.key,
+                    hide_release_builds_prop.key
                 ],
-                default=False,
-                takesResults=True
+                default      = False,
+                takesResults = True
             ),
-            haltOnFailure=False,
         )
     ]
 
@@ -381,14 +356,6 @@ def FormatInterpolate(format_string):
 
 @inject_paths
 def run_testament(platform):
-    base_env = {
-        'PATH': [
-            str(platform.current_dir),
-            str(platform.current_dir / 'bin'),
-            'bin',
-            "${PATH}"
-        ]
-    }
     test_url = "test-data/{buildername[0]}/{got_revision[0][nim]}/"
     test_directory = 'public_html/' + test_url
 
@@ -399,116 +366,87 @@ def run_testament(platform):
 
     return [
         ShellCommand(
-            name='Run Testament',
-            description='Running',
-            descriptionDone='Run',
-            descriptionSuffix=' Testament',
-
-            command=['koch', 'test'],
-            workdir=str(platform.nim_dir),
-            env=base_env,
-            haltOnFailure=True,
-            timeout=None
+            name              = 'Run Testament',
+            description       = 'Running',
+            descriptionDone   = 'Run',
+            descriptionSuffix = ' Testament',
+            command           = ['koch', 'test'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
+            timeout           = None
         ),
 
         MasterShellCommand(
-            command=['mkdir', '-p', Interpolate(test_directory)],
-            path="public_html",
-            hideStepIf=True
+            command    = ['mkdir', '-p', Interpolate(test_directory)],
+            path       = "public_html",
+            hideStepIf = True
         ),
 
         FileUpload(
-            slavesrc=html_test_results,
-            workdir=str(platform.nim_dir),
-            masterdest=FormatInterpolate(
-                test_directory + html_test_results_dest),
-            url=FormatInterpolate(test_url + html_test_results_dest)
+            slavesrc   = html_test_results,
+            workdir    = str(platform.nim_dir),
+            url        = FormatInterpolate(test_url + html_test_results_dest),
+            masterdest = FormatInterpolate(
+                test_directory + html_test_results_dest
+            ),
         ),
 
         FileUpload(
-            slavesrc=db_test_results,
-            workdir=str(platform.nim_dir),
-            masterdest=FormatInterpolate(
-                test_directory + db_test_results_dest),
-            url=FormatInterpolate(test_url + db_test_results_dest)
+            slavesrc   = db_test_results,
+            workdir    = str(platform.nim_dir),
+            url        = FormatInterpolate(test_url + db_test_results_dest),
+            masterdest = FormatInterpolate(
+                test_directory + db_test_results_dest
+            ),
         )
     ]
 
 
 @inject_paths
 def generate_csources(platform):
-    base_env = {
-        'PATH': [
-            str(platform.current_dir),
-            str(platform.current_dir / 'bin'),
-            'bin',
-            "${PATH}"
-        ]
-    }
-
     return [
         ShellCommand(
-            name='Generate CSources',
-            description='Generating',
-            descriptionDone='Generated',
-            descriptionSuffix=' CSources',
-
-            command=['koch', 'csources'],
-            workdir=str(platform.nim_dir),
-            env=base_env,
-            haltOnFailure=True,
+            name              = 'Generate CSources',
+            description       = 'Generating',
+            descriptionDone   = 'Generated',
+            descriptionSuffix = ' CSources',
+            command           = ['koch', 'csources'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
         )
     ]
 
 
 @inject_paths
 def generate_zip(platform):
-    base_env = {
-        'PATH': [
-            str(platform.current_dir),
-            str(platform.current_dir / 'bin'),
-            'bin',
-            "${PATH}"
-        ]
-    }
-
     return [
         ShellCommand(
-            name='Generate CSources',
-            description='Generating',
-            descriptionDone='Generated',
-            descriptionSuffix=' CSources',
-
-            command=['koch', 'csources'],
-            workdir=str(platform.nim_dir),
-            env=base_env,
-            haltOnFailure=True,
+            name              = 'Generate CSources',
+            description       = 'Generating',
+            descriptionDone   = 'Generated',
+            descriptionSuffix = ' CSources',
+            command           = ['koch', 'csources'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
         )
     ]
 
 
 @inject_paths
 def generate_installer(platform):
-    base_env = {
-        'PATH': [
-            str(platform.current_dir),
-            str(platform.current_dir / 'bin'),
-            'bin',
-            "${PATH}"
-        ]
-    }
-
     return [
         ShellCommand(
-            name='Generate CSources',
-            description='Generating',
-            descriptionDone='Generated',
-            descriptionSuffix=' CSources',
-
-            command=['koch', 'nsis'],
-            workdir=str(platform.nim_dir),
-            env=base_env,
-            haltOnFailure=True,
+            name              = 'Generate CSources',
+            description       = 'Generating',
+            descriptionDone   = 'Generated',
+            descriptionSuffix = ' CSources',
+            command           = ['koch', 'nsis'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
         )
     ]
 
