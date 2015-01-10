@@ -284,13 +284,13 @@ def boot_nimrod(platform):
             haltOnFailure     = False,
 
             doStepIf=step_has_property(
-                property_name = run_release_builds_prop.key,
-                default       = True
+                name    = run_release_builds_prop.key,
+                default = True
             ),
             hideStepIf=step_has_property(
-                property_name = hide_release_builds_prop.key,
-                default       = False,
-                takesResults  = True
+                name        = hide_release_builds_prop.key,
+                default     = False,
+                giveResults = True
             ),
         ),
 
