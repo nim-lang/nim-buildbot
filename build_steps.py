@@ -307,11 +307,11 @@ def boot_nimrod(platform):
             haltOnFailure     = True,
 
             doStepIf=step_has_property(
-                property_name = run_cpp_builds_prop.key,
+                name = run_cpp_builds_prop.key,
                 default       = True
             ),
             hideStepIf=step_has_property(
-                property_name = hide_cpp_builds_prop.key,
+                name = hide_cpp_builds_prop.key,
                 default       = False,
                 giveResults  = True
             ),
@@ -329,14 +329,14 @@ def boot_nimrod(platform):
             haltOnFailure     = False,
 
             doStepIf=step_has_properties(
-                property_names=[
+                names=[
                     run_cpp_builds_prop.key,
                     run_release_builds_prop.key
                 ],
                 default = True
             ),
             hideStepIf=step_has_properties(
-                property_names=[
+                names=[
                     hide_cpp_builds_prop.key,
                     hide_release_builds_prop.key
                 ],
