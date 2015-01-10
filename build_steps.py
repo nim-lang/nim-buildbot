@@ -50,7 +50,7 @@ common_git_parameters = {
 
 
 # Utility Functions
-def step_has_property(name, default=None, takesResults=False):
+def step_has_property(name, default=None, giveResults=False):
     def check_for_property(step):
         result = step.getProperty(name)
         if result is None:
