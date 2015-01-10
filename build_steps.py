@@ -313,7 +313,7 @@ def boot_nimrod(platform):
             hideStepIf=step_has_property(
                 property_name = hide_cpp_builds_prop.key,
                 default       = False,
-                takesResults  = True
+                giveResults  = True
             ),
         ),
 
@@ -341,7 +341,7 @@ def boot_nimrod(platform):
                     hide_release_builds_prop.key
                 ],
                 default      = False,
-                takesResults = True
+                giveResults  = True
             ),
         )
     ]
