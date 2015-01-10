@@ -39,7 +39,7 @@ resource_dirs = {
 
 # Common Build Step Parameters
 common_git_parameters = {
-    'haltOnFailure'     : True,
+    'haltOnFailure'    : True,
     'description'      : 'Updating',
     'descriptionDone'  : 'Updated',
     'mode'             : 'incremental',

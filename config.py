@@ -5,8 +5,7 @@
 # and packaging the Nim compiler.
 
 # The following is a list of properties that can be used to influence the
-# build processes. All these property names are assigned to variables of the
-# same name with '_property_name':
+# build processes.
 #  - 'python_exe': Name of the python executable to call when using
 #                  python scripts. Defaults to 'python'.
 #
@@ -23,7 +22,7 @@
 
 # Global Configuration
 import os
-from build_steps import construct_nim_build, python_exe_property_name, get_codebase
+from build_steps import construct_nim_build, python_exe_prop, get_codebase
 
 # Main configuration dictionary.
 c = BuildmasterConfig = {}
@@ -74,11 +73,10 @@ c['slaves'] = [
         **default_slave_params
     ),
 
-
     BuildSlave(
         "linux-arm5-slave-1", slave_passwords[6],
         properties={
-            python_exe_property_name: 'python2',
+            python_exe_prop.key: 'python2',
             'run_release_builds': False
         },
         **default_slave_params
@@ -87,7 +85,7 @@ c['slaves'] = [
     BuildSlave(
         "linux-arm6-slave-1", slave_passwords[7],
         properties={
-            python_exe_property_name: 'python2',
+            python_exe_prop.key: 'python2',
             'run_release_builds': False
         },
         **default_slave_params
@@ -96,24 +94,31 @@ c['slaves'] = [
     BuildSlave(
         "linux-arm7-slave-1", slave_passwords[8],
         properties={
-            python_exe_property_name: 'python2',
+            python_exe_prop.key: 'python2',
             'run_release_builds': False
         },
         **default_slave_params
     ),
 
+    # FreeBSD
+    BuildSlave(
+        "freebsd-x64-slave-1", slave_passwords[9],
+        properties={},
+        **default_slave_params
+    ),
+
     # Mac slaves
     BuildSlave(
-        "mac-x64-slave-1", slave_passwords[4],
+        "mac-x64-slave-1", '',
         properties={},
         **default_slave_params
     ),
 
     BuildSlave(
-        "mac-x32-slave-1", slave_passwords[5],
+        "mac-x32-slave-1", '',
         properties={},
         **default_slave_params
-    )
+    ),
 ]
 
 all_slave_names = [slave.name for slave in c['slaves']]
@@ -223,6 +228,15 @@ c['builders'] = [
         factory=construct_nim_build(
             csources_script_cmd='sh build.sh',
             platform='linux'
+        )
+    ),
+
+    BuilderConfig(
+        name="freebsd-x64-builder",
+        slavenames=["freebsd-x64-slave-1"],
+        factory=construct_nim_build(
+            csources_script_cmd='sh build.sh',
+            platform='freebsd'
         )
     ),
 ]
