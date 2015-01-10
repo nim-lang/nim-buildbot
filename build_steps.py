@@ -57,7 +57,7 @@ def step_has_property(name, default=None, giveResults=False):
             return default
         else:
             return result
-    if takesResults:
+    if giveResults:
         return lambda results, s: check_for_property(s)
     else:
         return check_for_property
