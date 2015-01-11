@@ -103,7 +103,9 @@ c['slaves'] = [
     # FreeBSD
     BuildSlave(
         "freebsd-x64-slave-1", slave_passwords[9],
-        properties={},
+        properties={
+            python_exe_prop.key: 'python2'
+        },
         **default_slave_params
     ),
 
