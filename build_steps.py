@@ -304,7 +304,7 @@ def boot_nimrod(platform):
             command           = ['nim', 'cpp', nimfile_dir],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
-            haltOnFailure     = True,
+            haltOnFailure     = False,
 
             doStepIf=step_has_property(
                 name = run_cpp_builds_prop.key,
