@@ -294,56 +294,56 @@ def boot_nimrod(platform):
             ),
         ),
 
-        ShellCommand(
-            name              = 'Bootstrap Debug Version of Nim Compiler '
-                                '(With C++ Backend)',
-            description       = 'Booting',
-            descriptionDone   = 'Booted',
-            descriptionSuffix = ' Debug Nim Compiler (With C++ Backend)',
+        # ShellCommand(
+        #    name              = 'Bootstrap Debug Version of Nim Compiler '
+        #                        '(With C++ Backend)',
+        #    description       = 'Booting',
+        #    descriptionDone   = 'Booted',
+        #    descriptionSuffix = ' Debug Nim Compiler (With C++ Backend)',
 
-            command           = ['nim', 'cpp', nimfile_dir],
-            workdir           = str(platform.nim_dir),
-            env               = platform.base_env,
-            haltOnFailure     = False,
+        #    command           = ['nim', 'cpp', nimfile_dir],
+        #    workdir           = str(platform.nim_dir),
+        #    env               = platform.base_env,
+        #    haltOnFailure     = False,
 
-            doStepIf=step_has_property(
-                name = run_cpp_builds_prop.key,
-                default       = True
-            ),
-            hideStepIf=step_has_property(
-                name = hide_cpp_builds_prop.key,
-                default       = False,
-                giveResults  = True
-            ),
-        ),
+        #    doStepIf=step_has_property(
+        #        name = run_cpp_builds_prop.key,
+        #        default       = True
+        #    ),
+        #    hideStepIf=step_has_property(
+        #        name = hide_cpp_builds_prop.key,
+        #        default       = False,
+        #        giveResults  = True
+        #    ),
+        #),
 
-        ShellCommand(
-            name              = 'Bootstrap Release Version of Nim Compiler'
-                                '(With C++ Backend)',
-            description       = 'Booting',
-            descriptionDone   = 'Booted',
-            descriptionSuffix = ' Release Nim Compiler (With C++ Backend)',
-            command           = ['nim', 'cpp', '-d:release', nimfile_dir],
-            workdir           = str(platform.nim_dir),
-            env               = platform.base_env,
-            haltOnFailure     = False,
+        #ShellCommand(
+        #    name              = 'Bootstrap Release Version of Nim Compiler'
+        #                        '(With C++ Backend)',
+        #    description       = 'Booting',
+        #    descriptionDone   = 'Booted',
+        #    descriptionSuffix = ' Release Nim Compiler (With C++ Backend)',
+        #    command           = ['nim', 'cpp', '-d:release', nimfile_dir],
+        #    workdir           = str(platform.nim_dir),
+        #    env               = platform.base_env,
+        #    haltOnFailure     = False,
 
-            doStepIf=step_has_properties(
-                names=[
-                    run_cpp_builds_prop.key,
-                    run_release_builds_prop.key
-                ],
-                default = True
-            ),
-            hideStepIf=step_has_properties(
-                names=[
-                    hide_cpp_builds_prop.key,
-                    hide_release_builds_prop.key
-                ],
-                default      = False,
-                giveResults  = True
-            ),
-        )
+        #    doStepIf=step_has_properties(
+        #        names=[
+        #            run_cpp_builds_prop.key,
+        #            run_release_builds_prop.key
+        #        ],
+        #        default = True
+        #    ),
+        #    hideStepIf=step_has_properties(
+        #        names=[
+        #            hide_cpp_builds_prop.key,
+        #            hide_release_builds_prop.key
+        #        ],
+        #        default      = False,
+        #        giveResults  = True
+        #    ),
+        #)
     ]
 
 
