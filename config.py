@@ -287,12 +287,26 @@ from buildbot.status import html
 from buildbot.status.web import authz, auth
 from buildbot.status.builder import Results
 from buildbot.status.web.base import HtmlResource
+from buildbot.status import words
 
 from twisted.web.static import File
 
-from infostore import user_credentials
+from infostore import user_credentials, irc_credentials
 
 # Set up the custom build status
+
+# IRC bot
+irc = words.IRC(
+    "irc.freenode.net", irc_credentials['username'],
+    useColors=False,
+    channels=[{"channel": "#nimbuild"}],
+    password=irc_credentials['password'],
+    notify_events={
+        'exception': 1,
+        'successToFailure': 1,
+        'failureToSuccess': 1,
+    }
+)
 
 
 class BuilderResource(HtmlResource):
@@ -342,7 +356,7 @@ class StatusImageResource(BuilderResource):
         """Display a build status image like Travis does."""
         request.setHeader('Cache-Control', 'no-cache')
 
-        #SUCCESS, WARNINGS, FAILURE, SKIPPED or EXCEPTION
+        # SUCCESS, WARNINGS, FAILURE, SKIPPED or EXCEPTION
         res = build.getResults()
         resname = Results[res]
 
@@ -370,6 +384,7 @@ class NimBuildStatus(html.WebStatus):
 # including web pages, email senders, and IRC bots.
 
 c['status'] = []
+c['status'].append(irc)
 
 authz_cfg = authz.Authz(
     # change any of these to True to enable; see the manual for more
