@@ -297,14 +297,16 @@ from infostore import user_credentials, irc_credentials
 
 # IRC bot
 irc = words.IRC(
-    "irc.freenode.net", irc_credentials['username'],
-    useColors=False,
+    host="irc.freenode.net", 
     channels=[{"channel": "#nimbuild"}],
+    nick=irc_credentials['username'],
     password=irc_credentials['password'],
+    useRevisions=True,
+    useColors=False,
     notify_events={
+        'finished': 1,
+        'failure': 1,
         'exception': 1,
-        'successToFailure': 1,
-        'failureToSuccess': 1,
     }
 )
 
