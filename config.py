@@ -418,7 +418,7 @@ c['titleURL'] = "http://nimrod-lang.org"
 # with an externally-visible host name which the buildbot cannot figure out
 # without some help.
 
-c['buildbotURL'] = "http://build.nim-lang.org"
+c['buildbotURL'] = "http://buildbot.nim-lang.org/"
 
 # DB URL
 
