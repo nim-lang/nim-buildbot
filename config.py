@@ -303,7 +303,6 @@ irc = words.IRC(
     channels=[{"channel": "#nimbuild"}],
     nick=irc_credentials['username'],
     password=irc_credentials['password'],
-    useRevisions=True,
     useColors=False,
     notify_events={
         'finished': 1,
