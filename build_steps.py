@@ -131,6 +131,8 @@ def update_utility_scripts(platform):
             workdir           = str(platform.scripts_dir),
             alwaysUseLatest   = True,
             hideStepIf        = False,
+            flunkOnWarnings   = False,
+            flunkOnFailure    = False,
             **common_parameters
         )
     ]
