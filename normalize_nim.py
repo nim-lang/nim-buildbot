@@ -5,15 +5,13 @@ import os
 import stat   
 
 set_bits = False
-if sys.platform in ['linux2', 'darwin', 'cygwin']:
-    nim_binary = path.join(sys.argv[1], 'nim')
-    nimrod_binary = path.join(sys.argv[1], 'nimrod')
-    set_bits = True
-elif sys.platform in ['win32']:
+if sys.platform == 'win32':
     nim_binary = path.join(sys.argv[1], 'nim.exe')
     nimrod_binary = path.join(sys.argv[1], 'nimrod.exe')
 else:
-    sys.exit("No suitable platform action found!")
+    nim_binary = path.join(sys.argv[1], 'nim')
+    nimrod_binary = path.join(sys.argv[1], 'nimrod')
+    set_bits = True
 
 if path.isfile(nim_binary) and path.exists(nim_binary):
     print("copyfile({0}, {1})".format(nim_binary, nimrod_binary))
