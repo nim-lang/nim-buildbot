@@ -186,7 +186,7 @@ def clean_repositories(platform):
             workdir           = str(platform.nim_dir),
             haltOnFailure     = False,
             flunkOnFailure    = False,
-            warnOnFailure     = True
+            warnOnFailure     = True,
             flunkOnWarnings   = False,
         ),
 
@@ -199,7 +199,7 @@ def clean_repositories(platform):
             workdir           = str(platform.nim_dir),
             haltOnFailure     = False,
             flunkOnFailure    = False,
-            warnOnFailure     = True
+            warnOnFailure     = True,
             flunkOnWarnings   = False,
         )
     ]
