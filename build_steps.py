@@ -185,7 +185,9 @@ def clean_repositories(platform):
             command           = nim_clean_cmd,
             workdir           = str(platform.nim_dir),
             haltOnFailure     = False,
+            flunkOnFailure    = False,
             warnOnFailure     = True
+            flunkOnWarnings   = False,
         ),
 
         ShellCommand(
@@ -196,7 +198,9 @@ def clean_repositories(platform):
             command           = csources_clean_cmd,
             workdir           = str(platform.nim_dir),
             haltOnFailure     = False,
+            flunkOnFailure    = False,
             warnOnFailure     = True
+            flunkOnWarnings   = False,
         )
     ]
 
