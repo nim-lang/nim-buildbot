@@ -174,6 +174,7 @@ def clean_repositories(platform):
     """
     csources_filter = str(platform.csources_dir / '*')
     nim_clean_cmd = ['git', 'clean', '-x', '-f', '-e', csources_filter, '-d']
+    csources_clean_cmd = ['git', 'clean', '-x', '-f', '-d']
 
     return [
         ShellCommand(
@@ -183,7 +184,8 @@ def clean_repositories(platform):
             descriptionSuffix = ' Local Nim Repository',
             command           = nim_clean_cmd,
             workdir           = str(platform.nim_dir),
-            haltOnFailure     = True,
+            haltOnFailure     = False,
+            warnOnFailure     = True
         ),
 
         ShellCommand(
@@ -191,9 +193,10 @@ def clean_repositories(platform):
             description       = 'Cleaning',
             descriptionDone   = 'Cleaned',
             descriptionSuffix = ' Local CSources Repository',
-            command           = ['git', 'clean', '-x', '-f', '-d'],
+            command           = csources_clean_cmd,
             workdir           = str(platform.nim_dir),
-            haltOnFailure     = True,
+            haltOnFailure     = False,
+            warnOnFailure     = True
         )
     ]
 
