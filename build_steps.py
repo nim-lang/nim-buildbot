@@ -17,7 +17,7 @@ hide_cpp_builds_prop     = Property('hide_cpp_builds')
 hide_release_builds_prop = Property('hide_release_builds')
 
 # Git Repositories
-nim_git_url      = 'https://github.com/Araq/Nim'
+nim_git_url      = 'https://github.com/nim-lang/Nim'
 csources_git_url = 'https://github.com/nimrod-code/csources'
 scripts_git_url  = 'https://github.com/nimrod-code/nim-buildbot'
 
