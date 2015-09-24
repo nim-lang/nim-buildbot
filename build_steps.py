@@ -448,10 +448,10 @@ def generate_zip(platform):
 def generate_installer(platform):
     return [
         ShellCommand(
-            name              = 'Generate CSources',
+            name              = 'Generate nsis',
             description       = 'Generating',
             descriptionDone   = 'Generated',
-            descriptionSuffix = ' CSources',
+            descriptionSuffix = ' nsis',
             command           = ['koch', 'nsis'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
