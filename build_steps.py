@@ -459,6 +459,21 @@ def generate_installer(platform):
         )
     ]
 
+@inject_paths
+def build_nimsuggest(platform):
+    nimsuggest = str(platform.compiler_dir / 'nimsuggest' / 'nimsuggest.nim')
+    return [
+        ShellCommand(
+            name              = 'Generate nimsuggest',
+            description       = 'Generating',
+            descriptionDone   = 'Generated',
+            descriptionSuffix = ' nimsuggest',
+            command           = ['nim', 'c', '-d:release', nimsuggest],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
+        )
+    ]
 
 # Build Configurations
 def construct_nim_build(platform, csources_script_cmd, f=None):
