@@ -505,22 +505,6 @@ def generate_installer(platform):
         )
     ]
 
-@inject_paths
-def build_nimsuggest(platform):
-    nimsuggest = str(platform.compiler_dir / 'nimsuggest' / 'nimsuggest.nim')
-    return [
-        ShellCommand(
-            name              = 'Generate nimsuggest',
-            description       = 'Generating',
-            descriptionDone   = 'Generated',
-            descriptionSuffix = ' nimsuggest',
-            command           = ['nim', 'c', '-d:release', nimsuggest],
-            workdir           = str(platform.nim_dir),
-            env               = platform.base_env,
-            haltOnFailure     = True,
-        )
-    ]
-
 # Build Configurations
 def construct_nim_build(platform, csources_script_cmd, f=None):
     if f is None:
@@ -537,7 +521,6 @@ def construct_nim_build(platform, csources_script_cmd, f=None):
     steps.extend(run_testament(platform))
     if sys.platform == 'windows':
         steps.extend(generate_installer(platform))
-        steps.extend(build_nimsuggest(platform))
         steps.extend(upload_release(platform))
     for step in steps:
         f.addStep(step)
