@@ -421,7 +421,7 @@ def upload_release(platform):
 
     return [
         ShellCommand(
-            name              = 'Bootstrap Release Version of Nim '
+            name              = 'Bootstrap Release Version of Nim',
             description       = 'Booting',
             descriptionDone   = 'Booted',
             descriptionSuffix = ' Release Nim',
@@ -520,7 +520,6 @@ def construct_nim_build(platform, csources_script_cmd, f=None):
     steps.extend(boot_nimrod(platform))
     steps.extend(run_testament(platform))
     if sys.platform == 'windows':
-        steps.extend(generate_installer(platform))
         steps.extend(upload_release(platform))
     for step in steps:
         f.addStep(step)

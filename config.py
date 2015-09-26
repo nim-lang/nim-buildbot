@@ -41,9 +41,11 @@ c['codebaseGenerator'] = get_codebase
 # This allows for automatic categorization into various variables.
 
 from buildbot.buildslave import BuildSlave
-from infostore import slave_passwords
+from infostore import slave_passwords, buildbot_admin_emails
 
-default_slave_params = {}
+default_slave_params = {
+    'notify_on_missing':buildbot_admin_emails
+}
 
 c['slaves'] = [
     # Windows slaves
@@ -293,9 +295,20 @@ from buildbot.status import words
 
 from twisted.web.static import File
 
-from infostore import user_credentials, irc_credentials
+from infostore import user_credentials, irc_credentials, email_credentials
+from infostore import buildbot_admin_emails
 
 # Set up the custom build status
+
+# Email notifier
+mn = MailNotifier(
+    fromaddr="buildbot@nim-lang.org",
+    subject="Nim-Buildbot: %(builder)s requires attention.",
+    mode=['change', 'warnings', 'exception'],
+    builders=all_builder_names,
+    sendToInterestedUsers=False,
+    extraRecipients=buildbot_admin_emails
+)
 
 # IRC bot
 irc = words.IRC(
