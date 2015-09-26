@@ -101,6 +101,8 @@ for platform in [windows_directories, posix_directories]:
             "${PATH}"
         ]
     }
+windows_directories.nim_exe = "nim.exe"
+posix_directories.nim_exe = "nim"
 
 
 def inject_paths(func):
@@ -416,8 +418,8 @@ def upload_release(platform):
     test_url = "test-data/{buildername[0]}/{got_revision[0][nim]}/"
     test_directory = 'public_html/' + test_url
 
-    nim_exe = 'build' / 'nim.exe'
-    nim_exe_dest = gen_dest_filename('nim.exe')
+    nim_exe_source = 'build' / platform.nim_exe
+    nim_exe_dest = gen_dest_filename(platform.nim_exe)
 
     return [
         ShellCommand(
@@ -448,7 +450,7 @@ def upload_release(platform):
         ),
 
         FileUpload(
-            slavesrc   = nim_exe,
+            slavesrc   = nim_exe_source,
             workdir    = str(platform.nim_dir),
             url        = FormatInterpolate(test_url + nim_exe_dest),
             masterdest = FormatInterpolate(
