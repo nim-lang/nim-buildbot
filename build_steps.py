@@ -411,6 +411,52 @@ def run_testament(platform):
         )
     ]
 
+@inject_paths
+def upload_release(platform):
+    test_url = "test-data/{buildername[0]}/{got_revision[0][nim]}/"
+    test_directory = 'public_html/' + test_url
+
+    nim_exe = 'build' / 'nim.exe'
+    nim_exe_dest = gen_dest_filename('nim.exe')
+
+    return [
+        ShellCommand(
+            name              = 'Bootstrap Release Version of Nim',
+            description       = 'Booting',
+            descriptionDone   = 'Booted',
+            descriptionSuffix = ' Release Nim',
+            command           = ['koch', 'boot', '-d:release'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = False,
+
+            doStepIf=step_has_property(
+                name    = run_release_builds_prop.key,
+                default = True
+            ),
+            hideStepIf=step_has_property(
+                name        = hide_release_builds_prop.key,
+                default     = False,
+                giveResults = True
+            ),
+        ),
+
+        MasterShellCommand(
+            command    = ['mkdir', '-p', Interpolate(test_directory)],
+            path       = "public_html",
+            hideStepIf = True
+        ),
+
+        FileUpload(
+            slavesrc   = nim_exe,
+            workdir    = str(platform.nim_dir),
+            url        = FormatInterpolate(test_url + nim_exe_dest),
+            masterdest = FormatInterpolate(
+                test_directory + nim_exe_dest
+            ),
+        ),
+
+    ]
 
 @inject_paths
 def generate_csources(platform):
@@ -448,17 +494,16 @@ def generate_zip(platform):
 def generate_installer(platform):
     return [
         ShellCommand(
-            name              = 'Generate CSources',
+            name              = 'Generate nsis',
             description       = 'Generating',
             descriptionDone   = 'Generated',
-            descriptionSuffix = ' CSources',
+            descriptionSuffix = ' nsis',
             command           = ['koch', 'nsis'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
         )
     ]
-
 
 # Build Configurations
 def construct_nim_build(platform, csources_script_cmd, f=None):
@@ -474,6 +519,8 @@ def construct_nim_build(platform, csources_script_cmd, f=None):
     steps.extend(compile_koch(platform))
     steps.extend(boot_nimrod(platform))
     steps.extend(run_testament(platform))
+    if sys.platform == 'windows':
+        steps.extend(upload_release(platform))
     for step in steps:
         f.addStep(step)
 
