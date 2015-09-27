@@ -305,8 +305,8 @@ from infostore import buildbot_admin_emails
 mn = MailNotifier(
     fromaddr="buildbot@nim-lang.org",
     subject="Nim-Buildbot: %(builder)s requires attention.",
-    mode=['change', 'warnings', 'exception'],
-    builders=all_builder_names,
+    mode=['change', 'problem', 'warnings', 'exception'],
+    builders=None,
     sendToInterestedUsers=False,
     extraRecipients=buildbot_admin_emails
 )
