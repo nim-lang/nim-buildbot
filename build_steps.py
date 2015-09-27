@@ -77,7 +77,11 @@ def step_has_properties(names, default=None, giveResults=False, sentinal=None):
 
 
 def gen_dest_filename(s):
-    return '{1}-{0}.{2}'.format('{buildnumber[0]}', *s.rsplit('.'))
+    parts = s.rsplit('.', 1)
+    result = '{1}-{0}'.format('{buildnumber[0]}', parts[0])
+    if len(parts) > 1:
+        result = result + result[1]
+    return result
 
 
 def get_codebase(change_dict):
