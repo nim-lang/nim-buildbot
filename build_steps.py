@@ -80,7 +80,7 @@ def gen_dest_filename(s):
     parts = s.rsplit('.', 1)
     result = '{1}-{0}'.format('{buildnumber[0]}', parts[0])
     if len(parts) > 1:
-        result = result + result[1]
+        result = result + parts[1]
     return result
 
 
