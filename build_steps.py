@@ -31,6 +31,7 @@ repositories = {
 resource_dirs = {
     'current_dir'  : './',
     'nim_dir'      : 'build/',
+    'nim_exe_dir'  : 'build/bin',
     'csources_dir' : 'build/csources/',
     'scripts_dir'  : 'scripts/',
     'tester_dir'   : 'tests/testament/',
@@ -422,7 +423,7 @@ def upload_release(platform):
     test_url = "test-data/{buildername[0]}/{got_revision[0][nim]}/"
     test_directory = 'public_html/' + test_url
 
-    nim_exe_source = str(platform.nim_dir / platform.nim_exe)
+    nim_exe_source = str(platform.nim_exe_dir / platform.nim_exe)
     nim_exe_dest = gen_dest_filename(platform.nim_exe)
 
     return [
