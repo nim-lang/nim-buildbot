@@ -291,6 +291,7 @@ from buildbot.status import html
 from buildbot.status.web import authz, auth
 from buildbot.status.builder import Results
 from buildbot.status.web.base import HtmlResource
+from buildbot.status.mail import MailNotifier
 from buildbot.status import words
 
 from twisted.web.static import File
