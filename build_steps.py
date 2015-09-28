@@ -81,7 +81,7 @@ def gen_dest_filename(s):
     parts = s.rsplit('.', 1)
     result = '{1}-{0}'.format('{buildnumber[0]}', parts[0])
     if len(parts) > 1:
-        result = result + parts[1]
+        result = result + '.' + parts[1]
     return result
 
 
@@ -420,34 +420,13 @@ def run_testament(platform):
 
 @inject_paths
 def upload_release(platform):
-    test_url = "test-data/{buildername[0]}/{got_revision[0][nim]}/"
-    test_directory = 'public_html/' + test_url
+    upload_url = "test-data/{buildername[0]}/{got_revision[0][nim]}/"
+    test_directory = 'public_html/' + upload_url
 
     nim_exe_source = str(platform.nim_exe_dir / platform.nim_exe)
     nim_exe_dest = gen_dest_filename(platform.nim_exe)
 
     return [
-        ShellCommand(
-            name              = 'Bootstrap Release Version of Nim',
-            description       = 'Booting',
-            descriptionDone   = 'Booted',
-            descriptionSuffix = ' Release Nim',
-            command           = ['koch', 'boot', '-d:release'],
-            workdir           = str(platform.nim_dir),
-            env               = platform.base_env,
-            haltOnFailure     = False,
-
-            doStepIf=step_has_property(
-                name    = run_release_builds_prop.key,
-                default = True
-            ),
-            hideStepIf=step_has_property(
-                name        = hide_release_builds_prop.key,
-                default     = False,
-                giveResults = True
-            ),
-        ),
-
         MasterShellCommand(
             command    = ['mkdir', '-p', Interpolate(test_directory)],
             path       = "public_html",
@@ -457,7 +436,7 @@ def upload_release(platform):
         FileUpload(
             slavesrc   = nim_exe_source,
             workdir    = str(platform.nim_dir),
-            url        = FormatInterpolate(test_url + nim_exe_dest),
+            url        = FormatInterpolate(upload_url + nim_exe_dest),
             masterdest = FormatInterpolate(
                 test_directory + nim_exe_dest
             ),
