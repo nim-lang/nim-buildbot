@@ -272,7 +272,7 @@ def compile_koch(platform):
 
 
 @inject_paths
-def boot_nimrod(platform):
+def boot_nimrod_debug(platform):
     nimfile_dir = str(platform.compiler_dir / 'nim.nim')
 
     return [
@@ -310,28 +310,32 @@ def boot_nimrod(platform):
             ),
         ),
 
-        # ShellCommand(
-        #    name              = 'Bootstrap Debug Version of Nim Compiler '
-        #                        '(With C++ Backend)',
-        #    description       = 'Booting',
-        #    descriptionDone   = 'Booted',
-        #    descriptionSuffix = ' Debug Nim Compiler (With C++ Backend)',
+        ShellCommand(
+            name              = 'Bootstrap Debug Version of Nim Compiler '
+                                '(With C++ Backend)',
+            description       = 'Booting',
+            descriptionDone   = 'Booted',
+            descriptionSuffix = ' Debug Nim Compiler (With C++ Backend)',
 
-        #    command           = ['nim', 'cpp', nimfile_dir],
-        #    workdir           = str(platform.nim_dir),
-        #    env               = platform.base_env,
-        #    haltOnFailure     = False,
+            command           = ['nim', 'cpp', nimfile_dir],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            
+            haltOnFailure     = False,
+            warnOnFailure     = True,
+            flunkOnFailure    = False,
+            flunkOnWarnings   = False,
 
-        #    doStepIf=step_has_property(
-        #        name = run_cpp_builds_prop.key,
-        #        default       = True
-        #    ),
-        #    hideStepIf=step_has_property(
-        #        name = hide_cpp_builds_prop.key,
-        #        default       = False,
-        #        giveResults  = True
-        #    ),
-        #),
+            doStepIf=step_has_property(
+               name = run_cpp_builds_prop.key,
+               default       = True
+            ),
+            hideStepIf=step_has_property(
+               name = hide_cpp_builds_prop.key,
+               default       = False,
+               giveResults  = True
+            ),
+        ),
 
         #ShellCommand(
         #    name              = 'Bootstrap Release Version of Nim Compiler'
@@ -493,6 +497,25 @@ def generate_installer(platform):
 
 # Build Configurations
 def construct_nim_build(platform, csources_script_cmd, f=None):
+    if f is None:
+        f = BuildFactory()
+
+    steps = []
+    steps.extend(update_utility_scripts(platform))
+    steps.extend(update_repositories(platform))
+    steps.extend(clean_repositories(platform))
+    steps.extend(build_csources(platform, csources_script_cmd))
+    steps.extend(normalize_nim_names(platform))
+    steps.extend(compile_koch(platform))
+    steps.extend(boot_nimrod(platform))
+    steps.extend(run_testament(platform))
+    steps.extend(upload_release(platform))
+    for step in steps:
+        f.addStep(step)
+
+    return f
+
+def construct_nim_release(platform, csources_script_cmd, f=None):
     if f is None:
         f = BuildFactory()
 
