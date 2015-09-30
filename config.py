@@ -113,16 +113,18 @@ c['slaves'] = [
 
     # Mac slaves
     BuildSlave(
-        "mac-x64-slave-1", '',
-        properties={},
+        "mac-x64-slave-1", slave_passwords[10],
+        properties={
+            python_exe_prop.key: 'python'
+        },
         **default_slave_params
     ),
 
-    BuildSlave(
-        "mac-x32-slave-1", '',
-        properties={},
-        **default_slave_params
-    ),
+    # BuildSlave(
+    #     "mac-x32-slave-1", '',
+    #     properties={},
+    #     **default_slave_params
+    # ),
 ]
 
 all_slave_names = [slave.name for slave in c['slaves']]
@@ -200,14 +202,14 @@ c['builders'] = [
             platform='mac'
         )
     ),
-    BuilderConfig(
-        name="mac-x32-builder",
-        slavenames=["mac-x32-slave-1"],
-        factory=construct_nim_build(
-            csources_script_cmd='sh build.sh',
-            platform='mac'
-        )
-    ),
+    # BuilderConfig(
+    #     name="mac-x32-builder",
+    #     slavenames=["mac-x32-slave-1"],
+    #     factory=construct_nim_build(
+    #         csources_script_cmd='sh build.sh',
+    #         platform='mac'
+    #     )
+    # ),
     BuilderConfig(
         name="linux-arm5-builder",
         slavenames=["linux-arm5-slave-1"],
