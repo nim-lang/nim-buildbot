@@ -320,7 +320,7 @@ def boot_nimrod_debug(platform):
             command           = ['nim', 'cpp', nimfile_dir],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
-            
+
             haltOnFailure     = False,
             warnOnFailure     = True,
             flunkOnFailure    = False,
@@ -336,35 +336,27 @@ def boot_nimrod_debug(platform):
                giveResults  = True
             ),
         ),
-
-        #ShellCommand(
-        #    name              = 'Bootstrap Release Version of Nim Compiler'
-        #                        '(With C++ Backend)',
-        #    description       = 'Booting',
-        #    descriptionDone   = 'Booted',
-        #    descriptionSuffix = ' Release Nim Compiler (With C++ Backend)',
-        #    command           = ['nim', 'cpp', '-d:release', nimfile_dir],
-        #    workdir           = str(platform.nim_dir),
-        #    env               = platform.base_env,
-        #    haltOnFailure     = False,
-
-        #    doStepIf=step_has_properties(
-        #        names=[
-        #            run_cpp_builds_prop.key,
-        #            run_release_builds_prop.key
-        #        ],
-        #        default = True
-        #    ),
-        #    hideStepIf=step_has_properties(
-        #        names=[
-        #            hide_cpp_builds_prop.key,
-        #            hide_release_builds_prop.key
-        #        ],
-        #        default      = False,
-        #        giveResults  = True
-        #    ),
-        #)
     ]
+
+
+@inject_paths
+def boot_nimrod_release(platform):
+    nimfile_dir = str(platform.compiler_dir / 'nim.nim')
+
+    return [
+        ShellCommand(
+            name              = 'Bootstrap Debug Version of Nim Compiler '
+                                '(With C Backend)',
+            description       = 'Booting',
+            descriptionDone   = 'Booted',
+            descriptionSuffix = ' Debug Nim Compiler (With C Backend)',
+            command           = ['koch', 'boot', '-d:release'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
+        )
+    ]
+
 
 
 def FormatInterpolate(format_string):
@@ -448,6 +440,7 @@ def upload_release(platform):
 
     ]
 
+
 @inject_paths
 def generate_csources(platform):
     return [
@@ -507,7 +500,7 @@ def construct_nim_build(platform, csources_script_cmd, f=None):
     steps.extend(build_csources(platform, csources_script_cmd))
     steps.extend(normalize_nim_names(platform))
     steps.extend(compile_koch(platform))
-    steps.extend(boot_nimrod(platform))
+    steps.extend(boot_nimrod_debug(platform))
     steps.extend(run_testament(platform))
     steps.extend(upload_release(platform))
     for step in steps:
@@ -526,9 +519,7 @@ def construct_nim_release(platform, csources_script_cmd, f=None):
     steps.extend(build_csources(platform, csources_script_cmd))
     steps.extend(normalize_nim_names(platform))
     steps.extend(compile_koch(platform))
-    steps.extend(boot_nimrod(platform))
-    steps.extend(run_testament(platform))
-    steps.extend(upload_release(platform))
+    steps.extend(boot_nimrod_release(platform))
     for step in steps:
         f.addStep(step)
 
