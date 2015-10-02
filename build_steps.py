@@ -502,7 +502,7 @@ def construct_nim_build(platform, csources_script_cmd, f=None):
     steps.extend(compile_koch(platform))
     steps.extend(boot_nimrod_debug(platform))
     steps.extend(run_testament(platform))
-    steps.extend(upload_release(platform))
+    #steps.extend(upload_release(platform))
     for step in steps:
         f.addStep(step)
 
