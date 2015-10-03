@@ -43,7 +43,9 @@ common_git_parameters = {
     'haltOnFailure'    : True,
     'description'      : 'Updating',
     'descriptionDone'  : 'Updated',
-    'mode'             : 'incremental',
+    'mode'             : 'full',
+    'method'           : 'clobber',
+    'shallow'          : True,
     'retry'            : (10, 20),
     'progress'         : True,
     'clobberOnFailure' : True
@@ -357,7 +359,7 @@ def boot_nimrod_release(platform):
         ),
 
         ShellCommand(
-            name              = 'Generate C Sources'
+            name              = 'Generate C Sources',
             description       = 'Generating',
             descriptionDone   = 'Generated',
             descriptionSuffix = ' C Sources',
@@ -368,7 +370,7 @@ def boot_nimrod_release(platform):
         ),
 
         ShellCommand(
-            name              = 'Build Tarball'
+            name              = 'Build Tarball',
             description       = 'Building',
             descriptionDone   = 'Built',
             descriptionSuffix = ' Tarball',

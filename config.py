@@ -23,6 +23,7 @@
 # Global Configuration
 import os
 from build_steps import construct_nim_build, python_exe_prop, get_codebase
+from build_steps import construct_nim_release
 
 # Main configuration dictionary.
 c = BuildmasterConfig = {}
@@ -249,7 +250,7 @@ c['builders'] = [
     BuilderConfig(
         name="windows-x64-installer",
         slavenames=["windows-x64-slave-1"],
-        factory=construct_nim_build(
+        factory=construct_nim_release(
             csources_script_cmd='build64.bat',
             platform='windows'
         )
@@ -257,7 +258,7 @@ c['builders'] = [
     BuilderConfig(
         name="windows-x32-installer",
         slavenames=["windows-x32-slave-1"],
-        factory=construct_nim_build(
+        factory=construct_nim_release(
             csources_script_cmd='build.bat',
             platform='windows'
         )
@@ -268,9 +269,9 @@ all_builder_names = []
 all_installer_names = []
 for builder in c['builders']:
     if 'builder' in builder.name:
-        all_builder_names.append(builder)
+        all_builder_names.append(builder.name)
     elif 'installer' in builder.name:
-        all_installer_names.append(builder)
+        all_installer_names.append(builder.name)
     else:
         raise Exception("Bad builder config name '{0}'".format(builder.name))
 
