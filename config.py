@@ -44,7 +44,7 @@ from buildbot.buildslave import BuildSlave
 from infostore import slave_passwords, buildbot_admin_emails
 
 default_slave_params = {
-    'notify_on_missing':buildbot_admin_emails
+    'notify_on_missing': buildbot_admin_emails
 }
 
 c['slaves'] = [
@@ -245,10 +245,34 @@ c['builders'] = [
             platform='freebsd'
         )
     ),
+
+    BuilderConfig(
+        name="windows-x64-installer",
+        slavenames=["windows-x64-slave-1"],
+        factory=construct_nim_build(
+            csources_script_cmd='build64.bat',
+            platform='windows'
+        )
+    ),
+    BuilderConfig(
+        name="windows-x32-installer",
+        slavenames=["windows-x32-slave-1"],
+        factory=construct_nim_build(
+            csources_script_cmd='build.bat',
+            platform='windows'
+        )
+    ),
 ]
 
-all_builder_names = [builder.name for builder in c['builders']]
-
+all_builder_names = []
+all_installer_names = []
+for builder in c['builders']:
+    if 'builder' in builder.name:
+        all_builder_names.append(builder)
+    elif 'installer' in builder.name:
+        all_installer_names.append(builder)
+    else:
+        raise Exception("Bad builder config name '{0}'".format(builder.name))
 
 # SCHEDULERS
 # Configure the Schedulers, which decide how to react to incoming changes.
@@ -281,6 +305,18 @@ c['schedulers'] = [
             'csources': {'repository': ''},
             'scripts': {'repository': ''},
         }
+    ),
+
+    ForceScheduler(
+        name="force-installer-scheduler",
+        builderNames=all_installer_names,
+        buttonName="Force Installer Build",
+        properties=[],
+        codebases={
+            'nim': {'repository': ''},
+            'csources': {'repository': ''},
+            'scripts': {'repository': ''},
+        }
     )
 ]
 
@@ -298,7 +334,7 @@ from buildbot.status import words
 
 from twisted.web.static import File
 
-from infostore import user_credentials, irc_credentials, email_credentials
+from infostore import user_credentials, irc_credentials
 from infostore import buildbot_admin_emails
 
 # Set up the custom build status
@@ -315,7 +351,7 @@ mn = MailNotifier(
 
 # IRC bot
 irc = words.IRC(
-    host="irc.freenode.net", 
+    host="irc.freenode.net",
     channels=[{"channel": "#nimbuild"}],
     nick=irc_credentials['username'],
     password=irc_credentials['password'],
@@ -410,7 +446,7 @@ authz_cfg = authz.Authz(
     # options
     auth=auth.BasicAuth(user_credentials),
     gracefulShutdown=False,
-    forceBuild='auth',  # use this to test your slave once it is set up
+    forceBuild='auth',
     forceAllBuilds='auth',
     pingBuilder=False,
     stopBuild='auth',

@@ -322,7 +322,7 @@ def boot_nimrod_debug(platform):
             env               = platform.base_env,
 
             haltOnFailure     = False,
-            warnOnFailure     = True,
+            warnOnFailure     = False,
             flunkOnFailure    = False,
             flunkOnWarnings   = False,
 
@@ -345,12 +345,34 @@ def boot_nimrod_release(platform):
 
     return [
         ShellCommand(
-            name              = 'Bootstrap Debug Version of Nim Compiler '
+            name              = 'Bootstrap Release Version of Nim Compiler '
                                 '(With C Backend)',
             description       = 'Booting',
             descriptionDone   = 'Booted',
-            descriptionSuffix = ' Debug Nim Compiler (With C Backend)',
+            descriptionSuffix = ' Release Nim Compiler (With C Backend)',
             command           = ['koch', 'boot', '-d:release'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
+        ),
+
+        ShellCommand(
+            name              = 'Generate C Sources'
+            description       = 'Generating',
+            descriptionDone   = 'Generated',
+            descriptionSuffix = ' C Sources',
+            command           = ['koch', 'csources', '-d:release'],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
+        ),
+
+        ShellCommand(
+            name              = 'Build Tarball'
+            description       = 'Building',
+            descriptionDone   = 'Built',
+            descriptionSuffix = ' Tarball',
+            command           = ['koch', 'targz', '-d:release'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
@@ -442,46 +464,14 @@ def upload_release(platform):
 
 
 @inject_paths
-def generate_csources(platform):
-    return [
-        ShellCommand(
-            name              = 'Generate CSources',
-            description       = 'Generating',
-            descriptionDone   = 'Generated',
-            descriptionSuffix = ' CSources',
-            command           = ['koch', 'csources'],
-            workdir           = str(platform.nim_dir),
-            env               = platform.base_env,
-            haltOnFailure     = True,
-        )
-    ]
-
-
-@inject_paths
-def generate_zip(platform):
-    return [
-        ShellCommand(
-            name              = 'Generate CSources',
-            description       = 'Generating',
-            descriptionDone   = 'Generated',
-            descriptionSuffix = ' CSources',
-            command           = ['koch', 'csources'],
-            workdir           = str(platform.nim_dir),
-            env               = platform.base_env,
-            haltOnFailure     = True,
-        )
-    ]
-
-
-@inject_paths
 def generate_installer(platform):
     return [
         ShellCommand(
-            name              = 'Generate nsis',
+            name              = 'Generate NSIS Installer',
             description       = 'Generating',
             descriptionDone   = 'Generated',
-            descriptionSuffix = ' nsis',
-            command           = ['koch', 'nsis'],
+            descriptionSuffix = ' NSIS Installer',
+            command           = ['koch', 'nsis', '-d:release'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
@@ -520,6 +510,7 @@ def construct_nim_release(platform, csources_script_cmd, f=None):
     steps.extend(normalize_nim_names(platform))
     steps.extend(compile_koch(platform))
     steps.extend(boot_nimrod_release(platform))
+    steps.extend(generate_installer(platform))
     for step in steps:
         f.addStep(step)
 
