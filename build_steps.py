@@ -467,7 +467,20 @@ def upload_release(platform):
 
 @inject_paths
 def generate_installer(platform):
+    script = str(platform.nim_dir / "tools" / "niminst" / "EnvVarUpdate.nsh")
+    destination = str(platform.nim_dir / "build")
     return [
+        ShellCommand(
+            name              = 'Copy Installer Resources',
+            description       = 'Copying',
+            descriptionDone   = 'Copied',
+            descriptionSuffix = ' Installer Resources',
+            command           = ['copy', '/Y', script, destination],
+            workdir           = str(platform.nim_dir),
+            env               = platform.base_env,
+            haltOnFailure     = True,
+        ),
+
         ShellCommand(
             name              = 'Generate NSIS Installer',
             description       = 'Generating',
