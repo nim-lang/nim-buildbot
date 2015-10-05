@@ -29,7 +29,7 @@ repositories = {
 
 # Resource Directories
 resource_dirs = {
-    'root_build_dir'  : './',
+    'current_dir'  : './',
     'nim_dir'      : 'build/',
     'csources_dir' : 'build/csources/',
     'scripts_dir'  : 'scripts/',
@@ -100,7 +100,7 @@ for key, value in resource_dirs.iteritems():
 for platform in [windows_directories, posix_directories]:
     platform.base_env = {
         'PATH': [
-            str(platform.root_build_dir),
+            str(platform.current_dir),
             str(platform.nim_dir / 'bin'),
             'bin',
             "${PATH}"
@@ -246,7 +246,7 @@ def normalize_nim_names(platform):
             descriptionDone   = 'Normalized',
             descriptionSuffix = ' Binary Names',
             command           = [python_exe_prop, script_path, bin_dir],
-            workdir           = str(platform.root_build_dir),
+            workdir           = str(platform.current_dir),
             hideStepIf        = False
         )
     ]
@@ -273,7 +273,7 @@ def compile_koch(platform):
 
 @inject_paths
 def boot_nimrod_debug(platform):
-    nimfile_dir = str(platform.nim_dir / "compiler" / 'nim.nim')
+    nimfile_dir = str(platform.current_dir / "compiler" / 'nim.nim')
 
     return [
         ShellCommand(
@@ -341,7 +341,6 @@ def boot_nimrod_debug(platform):
 
 @inject_paths
 def boot_nimrod_release(platform):
-    nimfile_dir = str(platform.nim_dir / "compiler" / 'nim.nim')
 
     return [
         ShellCommand(
@@ -372,7 +371,7 @@ def boot_nimrod_release(platform):
             description       = 'Building',
             descriptionDone   = 'Built',
             descriptionSuffix = ' Tarball',
-            command           = ['koch', 'targz', '-d:release'],
+            command           = ['koch', 'zip', '-d:release'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
@@ -465,8 +464,8 @@ def upload_release(platform):
 
 @inject_paths
 def generate_installer(platform):
-    script = str(platform.nim_dir / "tools" / "niminst" / "EnvVarUpdate.nsh")
-    destination = str(platform.nim_dir / "build")
+    script = str(platform.current_dir / "tools" / "niminst" / "EnvVarUpdate.nsh")
+    destination = str(platform.current_dir / "build")
     return [
         ShellCommand(
             name              = 'Copy Installer Resources',
@@ -474,6 +473,7 @@ def generate_installer(platform):
             descriptionDone   = 'Copied',
             descriptionSuffix = ' Installer Resources',
             command           = ['copy', '/Y', script, destination],
+            workdir           = platform.nim_dir
             env               = platform.base_env,
             haltOnFailure     = True,
         ),
