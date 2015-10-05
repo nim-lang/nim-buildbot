@@ -473,7 +473,7 @@ def generate_installer(platform):
             descriptionDone   = 'Copied',
             descriptionSuffix = ' Installer Resources',
             command           = ['copy', '/Y', script, destination],
-            workdir           = platform.nim_dir
+            workdir           = platform.nim_dir,
             env               = platform.base_env,
             haltOnFailure     = True,
         ),
