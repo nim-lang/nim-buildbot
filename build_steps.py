@@ -366,16 +366,16 @@ def boot_nimrod_release(platform):
             haltOnFailure     = True,
         ),
 
-        ShellCommand(
-            name              = 'Build Tarball',
-            description       = 'Building',
-            descriptionDone   = 'Built',
-            descriptionSuffix = ' Tarball',
-            command           = ['koch', 'zip', '-d:release'],
-            workdir           = str(platform.nim_dir),
-            env               = platform.base_env,
-            haltOnFailure     = True,
-        )
+        # ShellCommand(
+        #     name              = 'Build Tarball',
+        #     description       = 'Building',
+        #     descriptionDone   = 'Built',
+        #     descriptionSuffix = ' Tarball',
+        #     command           = ['koch', 'zip', '-d:release'],
+        #     workdir           = str(platform.nim_dir),
+        #     env               = platform.base_env,
+        #     haltOnFailure     = True,
+        # )
     ]
 
 
