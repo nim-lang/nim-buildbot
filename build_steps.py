@@ -29,13 +29,11 @@ repositories = {
 
 # Resource Directories
 resource_dirs = {
-    'current_dir'  : './',
+    'root_build_dir'  : './',
     'nim_dir'      : 'build/',
-    'nim_exe_dir'  : 'build/bin',
     'csources_dir' : 'build/csources/',
     'scripts_dir'  : 'scripts/',
     'tester_dir'   : 'tests/testament/',
-    'compiler_dir' : 'compiler'
 }
 
 # Common Build Step Parameters
@@ -102,8 +100,8 @@ for key, value in resource_dirs.iteritems():
 for platform in [windows_directories, posix_directories]:
     platform.base_env = {
         'PATH': [
-            str(platform.current_dir),
-            str(platform.current_dir / 'bin'),
+            str(platform.root_build_dir),
+            str(platform.nim_dir / 'bin'),
             'bin',
             "${PATH}"
         ]
@@ -248,7 +246,7 @@ def normalize_nim_names(platform):
             descriptionDone   = 'Normalized',
             descriptionSuffix = ' Binary Names',
             command           = [python_exe_prop, script_path, bin_dir],
-            workdir           = str(platform.current_dir),
+            workdir           = str(platform.root_build_dir),
             hideStepIf        = False
         )
     ]
@@ -275,7 +273,7 @@ def compile_koch(platform):
 
 @inject_paths
 def boot_nimrod_debug(platform):
-    nimfile_dir = str(platform.compiler_dir / 'nim.nim')
+    nimfile_dir = str(platform.nim_dir / "compiler" / 'nim.nim')
 
     return [
         ShellCommand(
@@ -343,7 +341,7 @@ def boot_nimrod_debug(platform):
 
 @inject_paths
 def boot_nimrod_release(platform):
-    nimfile_dir = str(platform.compiler_dir / 'nim.nim')
+    nimfile_dir = str(platform.nim_dir / "compiler" / 'nim.nim')
 
     return [
         ShellCommand(
@@ -443,7 +441,7 @@ def upload_release(platform):
     upload_url = "test-data/{buildername[0]}/{got_revision[0][nim]}/"
     test_directory = 'public_html/' + upload_url
 
-    nim_exe_source = str(platform.nim_exe_dir / platform.nim_exe)
+    nim_exe_source = str(platform.nim_dir / "bin" / platform.nim_exe)
     nim_exe_dest = gen_dest_filename(platform.nim_exe)
 
     return [
@@ -476,7 +474,6 @@ def generate_installer(platform):
             descriptionDone   = 'Copied',
             descriptionSuffix = ' Installer Resources',
             command           = ['copy', '/Y', script, destination],
-            workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
         ),
