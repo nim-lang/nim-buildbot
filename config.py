@@ -414,7 +414,8 @@ class StatusImageResource(BuilderResource):
         """Display a build status image like Travis does."""
         start_time, end_time = build.getTimes()
         target_time = end_time or start_time or datetime.utcnow()
-        target_time = target_time.astimezone(UTC)
+        if isinstance(target_time, float):
+            target_time = datetime.fromtimestamp(target_time, UTC)
         
         request.setHeader('Cache-Control', 'no-cache')
         request.setHeader('Last-Modified', target_time.strftime('%a, %d %b %Y %H:%M:%S GMT'))
