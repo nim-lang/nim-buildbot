@@ -404,13 +404,20 @@ class BuilderResource(HtmlResource):
 
         return self.content_hook(request, ctx, builder, build, number)
 
+from datetime import datetime
+from buildbot.util import UTC
 
 class StatusImageResource(BuilderResource):
     contentType = 'image/svg+xml'
 
     def content_hook(self, request, ctx, builder, build, number):
         """Display a build status image like Travis does."""
+        start_time, end_time = build.getTimes()
+        target_time = end_time or start_time or datetime.utcnow()
+        target_time = target_time.astimezone(UTC)
+        
         request.setHeader('Cache-Control', 'no-cache')
+        request.setHeader('Last-Modified', target_time.strftime('%a, %d %b %Y %H:%M:%S GMT'))
 
         # SUCCESS, WARNINGS, FAILURE, SKIPPED or EXCEPTION
         res = build.getResults()
