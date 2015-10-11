@@ -326,6 +326,7 @@ c['schedulers'] = [
 # Set up the various target for build status.
 # In particular, we set up a page to handle requests for individual test
 # results, as well as a page to handle retrieving build status badges
+
 from buildbot.status import html
 from buildbot.status.web import authz, auth
 from buildbot.status.builder import Results
@@ -333,10 +334,12 @@ from buildbot.status.web.base import HtmlResource
 from buildbot.status.mail import MailNotifier
 from buildbot.status import words
 
+from buildbot.plugins.status import GitHubStatus
+
 from twisted.web.static import File
 
 from infostore import user_credentials, irc_credentials
-from infostore import buildbot_admin_emails
+from infostore import buildbot_admin_emails, github_token
 
 # Set up the custom build status
 
@@ -364,6 +367,16 @@ irc = words.IRC(
     }
 )
 
+# Github Status
+gs = GitHubStatus(
+    token=github_token,
+    repoOwner="nim-lang",
+    repoName="Nim",
+    startDescription='Build started.',
+    endDescription='Build done.'
+)
+
+c['status'] = [irc, gs]
 
 class BuilderResource(HtmlResource):
 
@@ -443,12 +456,6 @@ class NimBuildStatus(html.WebStatus):
         self.putChild("buildstatusimage", StatusImageResource())
 
 
-# 'status' is a list of Status Targets. The results of each build will be
-# pushed to these targets. buildbot/status/*.py has a variety to choose from,
-# including web pages, email senders, and IRC bots.
-
-c['status'] = []
-c['status'].append(irc)
 
 authz_cfg = authz.Authz(
     # change any of these to True to enable; see the manual for more
