@@ -333,8 +333,7 @@ from buildbot.status.builder import Results
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.mail import MailNotifier
 from buildbot.status import words
-
-from buildbot.plugins.status import GitHubStatus
+from buildbot.status.github import GitHubStatus
 
 from twisted.web.static import File
 
