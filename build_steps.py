@@ -35,6 +35,7 @@ resource_dirs = {
     'csources_dir' : 'build/csources/',
     'scripts_dir'  : 'scripts/',
     'tester_dir'   : 'tests/testament/',
+    'absolute_idir': '{workdir}'
 }
 
 # Common Build Step Parameters
@@ -385,6 +386,13 @@ def FormatInterpolate(format_string):
         return format_string.format(**props.properties)
     return render_revision
 
+def StripDriveInterpolate(format_string):
+    @renderer
+    def render_revision(props):
+        return format_string.format(**props.properties)[2:]
+    return render_revision
+
+base_dir = StripDriveInterpolate("{workdir}")
 
 @inject_paths
 def run_testament(platform):
@@ -462,8 +470,8 @@ def upload_release(platform):
 
 @inject_paths
 def generate_installer(platform):
-    script_src = str(platform.current_dir / "tools" / "niminst")
-    script_dst = str(platform.current_dir / "build")
+    script_src = str(platform.absolute_idir / "tools" / "niminst")
+    script_dst = str(platform.absolute_idir / "build")
 
     dlls_src = str(platform.current_dir / ".." / "dlls")
     dlls_dst = str(platform.current_dir / "build" / "bin")
@@ -478,7 +486,7 @@ def generate_installer(platform):
             destination       = script_dst,
             files             = ['EnvVarUpdate.nsh'],
             env               = platform.base_env,
-            workdir           = FormatInterpolate("{workdir}"),
+            workdir           = base_dir,
             haltOnFailure     = True,
             **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer Script'
@@ -489,7 +497,7 @@ def generate_installer(platform):
             source            = dlls_src,
             destination       = dlls_dst,
             env               = platform.base_env,
-            workdir           = FormatInterpolate("{workdir}"),
+            workdir           = base_dir,
             haltOnFailure     = True,
             **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer DLL\'s'
