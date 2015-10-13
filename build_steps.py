@@ -403,7 +403,7 @@ def run_testament(platform):
             env               = platform.base_env,
             haltOnFailure     = True,
             timeout           = None,
-            gen_description(
+            **gen_description(
                 'Run', 'Running', 'Run', 'Testament'
             )
         ),
@@ -476,10 +476,10 @@ def generate_installer(platform):
         Robocopy(
             source            = script_src,
             destination       = script_dst,
-            files             = ['EnvVarUpdate.nsh']
+            files             = ['EnvVarUpdate.nsh'],
             env               = platform.base_env,
             haltOnFailure     = True,
-            gen_description(
+            **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer Script'
             )
         ),
@@ -489,7 +489,7 @@ def generate_installer(platform):
             destination       = dlls_dst,
             env               = platform.base_env,
             haltOnFailure     = True,
-            gen_description(
+            **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer DLL\'s'
             )
         ),
