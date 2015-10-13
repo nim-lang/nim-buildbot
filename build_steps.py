@@ -2,6 +2,7 @@ from pathlib import PureWindowsPath, PurePosixPath
 from buildbot.steps.source.git import Git
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileUpload
+from buildbot.steps.mswin import Robocopy
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Property, Interpolate, renderer
 from buildbot.steps.master import MasterShellCommand
@@ -84,6 +85,13 @@ def gen_dest_filename(s):
         result = result + '.' + parts[1]
     return result
 
+def gen_description(present_tense, running_tense, done_tense, action, sep=' '):
+    return dict(
+        name=present_tense + sep + action,
+        description=present_tense,
+        descriptionDone=running_tense,
+        descriptionSuffix=done_tense
+    )
 
 def get_codebase(change_dict):
     return repositories[change_dict['repository']]
@@ -185,29 +193,27 @@ def clean_repositories(platform):
 
     return [
         ShellCommand(
-            name              = 'Clean Local Nim Repository',
-            description       = 'Cleaning',
-            descriptionDone   = 'Cleaned',
-            descriptionSuffix = ' Local Nim Repository',
             command           = nim_clean_cmd,
             workdir           = str(platform.nim_dir),
             haltOnFailure     = False,
             flunkOnFailure    = False,
             warnOnFailure     = True,
             flunkOnWarnings   = False,
+            **gen_description(
+                'Clean', 'Cleaning', 'Cleaned', 'Local Nim Repository'
+            )
         ),
 
         ShellCommand(
-            name              = 'Clean Local CSources Repository',
-            description       = 'Cleaning',
-            descriptionDone   = 'Cleaned',
-            descriptionSuffix = ' Local CSources Repository',
             command           = csources_clean_cmd,
             workdir           = str(platform.nim_dir),
             haltOnFailure     = False,
             flunkOnFailure    = False,
             warnOnFailure     = True,
             flunkOnWarnings   = False,
+            **gen_description(
+                'Clean', 'Cleaning', 'Cleaned', 'Local CSources Repository',
+            )
         )
     ]
 
@@ -220,13 +226,12 @@ def build_csources(platform, csources_script_cmd):
     """
     return [
         ShellCommand(
-            name              = 'Build Basic Nim Binary',
-            description       = 'Building',
-            descriptionDone   = 'Built',
-            descriptionSuffix = ' Basic CSources Binary',
             command           = csources_script_cmd,
             workdir           = str(platform.csources_dir),
             haltOnFailure     = True,
+            **gen_description(
+                'Build', 'Building', 'Built', 'Basic CSources Binary'
+            )
         )
     ]
 
@@ -241,13 +246,12 @@ def normalize_nim_names(platform):
 
     return [
         ShellCommand(
-            name              = 'Normalizing Binary Names',
-            description       = 'Normalizing',
-            descriptionDone   = 'Normalized',
-            descriptionSuffix = ' Binary Names',
             command           = [python_exe_prop, script_path, bin_dir],
             workdir           = str(platform.current_dir),
-            hideStepIf        = False
+            hideStepIf        = False,
+            **gen_description(
+                'Normalize', 'Normalizing', 'Normalized', 'Binary Names'
+            )
         )
     ]
 
@@ -259,14 +263,13 @@ def compile_koch(platform):
     """
     return [
         ShellCommand(
-            name              = 'Compile Koch',
-            description       = 'Compiling',
-            descriptionDone   = 'Compiled',
-            descriptionSuffix = ' Koch Binary',
             command           = ['nim', 'c', 'koch.nim'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
+            **gen_description(
+                'Compile', 'Compiling', 'Compiled', 'Koch Binary'
+            )
         )
     ]
 
@@ -277,23 +280,17 @@ def boot_nimrod_debug(platform):
 
     return [
         ShellCommand(
-            name              = 'Bootstrap Debug Version of Nim Compiler '
-                                '(With C Backend)',
-            description       = 'Booting',
-            descriptionDone   = 'Booted',
-            descriptionSuffix = ' Debug Nim Compiler (With C Backend)',
             command           = ['koch', 'boot'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
+            **gen_description(
+                'Bootstrap', 'Booting', 'Booted', 
+                'Debug Version of Nim Compiler (With C Backend)',
+            )
         ),
 
         ShellCommand(
-            name              = 'Bootstrap Release Version of Nim Compiler '
-                                '(With C Backend)',
-            description       = 'Booting',
-            descriptionDone   = 'Booted',
-            descriptionSuffix = ' Release Nim Compiler (With C Backend)',
             command           = ['nim', 'c', '-d:release', nimfile_dir],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
@@ -308,15 +305,14 @@ def boot_nimrod_debug(platform):
                 default     = False,
                 giveResults = True
             ),
+
+            **gen_description(
+                'Bootstrap', 'Booting', 'Booted', 
+                'Release Version of Nim Compiler (With C Backend)',
+            )
         ),
 
         ShellCommand(
-            name              = 'Bootstrap Debug Version of Nim Compiler '
-                                '(With C++ Backend)',
-            description       = 'Booting',
-            descriptionDone   = 'Booted',
-            descriptionSuffix = ' Debug Nim Compiler (With C++ Backend)',
-
             command           = ['nim', 'cpp', nimfile_dir],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
@@ -335,6 +331,11 @@ def boot_nimrod_debug(platform):
                default       = False,
                giveResults  = True
             ),
+
+            **gen_description(
+                'Bootstrap', 'Booting', 'Booted', 
+                'Debug Version of Nim Compiler (With C++ Backend)',
+            )
         ),
     ]
 
@@ -344,26 +345,24 @@ def boot_nimrod_release(platform):
 
     return [
         ShellCommand(
-            name              = 'Bootstrap Release Version of Nim Compiler '
-                                '(With C Backend)',
-            description       = 'Booting',
-            descriptionDone   = 'Booted',
-            descriptionSuffix = ' Release Nim Compiler (With C Backend)',
             command           = ['koch', 'boot', '-d:release'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
+            **gen_description(
+                'Bootstrap', 'Booting', 'Booted', 
+                'Release Version of Nim Compiler (With C Backend)',
+            )
         ),
 
         ShellCommand(
-            name              = 'Generate C Sources',
-            description       = 'Generating',
-            descriptionDone   = 'Generated',
-            descriptionSuffix = ' C Sources',
             command           = ['koch', 'csources', '-d:release'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
+            **gen_description(
+                'Generate', 'Generating', 'Generated', 'C Sources'
+            )
         ),
 
         # ShellCommand(
@@ -399,15 +398,14 @@ def run_testament(platform):
 
     return [
         ShellCommand(
-            name              = 'Run Testament',
-            description       = 'Running',
-            descriptionDone   = 'Run',
-            descriptionSuffix = ' Testament',
             command           = ['koch', 'test'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
-            timeout           = None
+            timeout           = None,
+            gen_description(
+                'Run', 'Running', 'Run', 'Testament'
+            )
         ),
 
         MasterShellCommand(
@@ -464,29 +462,53 @@ def upload_release(platform):
 
 @inject_paths
 def generate_installer(platform):
-    script = str(platform.current_dir / "tools" / "niminst" / "EnvVarUpdate.nsh")
-    destination = str(platform.current_dir / "build")
+    script_src = str(platform.current_dir / "tools" / "niminst")
+    script_dst = str(platform.current_dir / "build")
+
+    dlls_src = str(platform.current_dir / ".." / "dlls")
+    dlls_dst = str(platform.current_dir / "build" / "bin")
+
+    upload_src = str(platform.current_dir / 'build' / 'build')
+    upload_dst = "installer-data/{buildername[0]}/{got_revision[0][nim]}/"
+    upload_url = 'public_html/' + upload_dst
+
     return [
-        ShellCommand(
-            name              = 'Copy Installer Resources',
-            description       = 'Copying',
-            descriptionDone   = 'Copied',
-            descriptionSuffix = ' Installer Resources',
-            command           = ['copy', '/Y', script, destination],
-            workdir           = platform.nim_dir,
+        Robocopy(
+            source            = script_src,
+            destination       = script_dst,
+            files             = ['EnvVarUpdate.nsh']
             env               = platform.base_env,
             haltOnFailure     = True,
+            gen_description(
+                'Copy', 'Copying', 'Copied', 'Installer Script'
+            )
+        ),
+
+        Robocopy(
+            source            = dlls_src,
+            destination       = dlls_dst,
+            env               = platform.base_env,
+            haltOnFailure     = True,
+            gen_description(
+                'Copy', 'Copying', 'Copied', 'Installer DLL\'s'
+            )
         ),
 
         ShellCommand(
-            name              = 'Generate NSIS Installer',
-            description       = 'Generating',
-            descriptionDone   = 'Generated',
-            descriptionSuffix = ' NSIS Installer',
             command           = ['koch', 'nsis', '-d:release'],
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
+            gen_description(
+                'Generate', 'Generating', 'Generated', 'NSIS Installer'
+            )
+        ),
+
+        DirectoryUpload(
+            slavesrc   = upload_src,
+            masterdest = upload_dst
+            url        = FormatInterpolate(upload_url),
+            compress   = 'bz2'
         )
     ]
 
