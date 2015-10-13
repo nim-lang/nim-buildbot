@@ -1,7 +1,7 @@
 from pathlib import PureWindowsPath, PurePosixPath
 from buildbot.steps.source.git import Git
 from buildbot.steps.shell import ShellCommand
-from buildbot.steps.transfer import FileUpload
+from buildbot.steps.transfer import FileUpload, DirectoryUpload
 from buildbot.steps.mswin import Robocopy
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Property, Interpolate, renderer
