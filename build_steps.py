@@ -499,14 +499,14 @@ def generate_installer(platform):
             workdir           = str(platform.nim_dir),
             env               = platform.base_env,
             haltOnFailure     = True,
-            gen_description(
+            **gen_description(
                 'Generate', 'Generating', 'Generated', 'NSIS Installer'
             )
         ),
 
         DirectoryUpload(
             slavesrc   = upload_src,
-            masterdest = upload_dst
+            masterdest = upload_dst,
             url        = FormatInterpolate(upload_url),
             compress   = 'bz2'
         )
