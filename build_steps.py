@@ -88,9 +88,9 @@ def gen_dest_filename(s):
 def gen_description(present_tense, running_tense, done_tense, action, sep=' '):
     return dict(
         name=present_tense + sep + action,
-        description=present_tense,
-        descriptionDone=running_tense,
-        descriptionSuffix=done_tense
+        description=running_tense,
+        descriptionDone=done_tense,
+        descriptionSuffix=action
     )
 
 def get_codebase(change_dict):
@@ -409,7 +409,7 @@ def run_testament(platform):
         ),
 
         MasterShellCommand(
-            command    = ['mkdir', '-p', Interpolate(test_directory)],
+            command    = ['mkdir', '-p', FormatInterpolate(test_directory)],
             path       = "public_html",
             hideStepIf = True
         ),
@@ -478,6 +478,7 @@ def generate_installer(platform):
             destination       = script_dst,
             files             = ['EnvVarUpdate.nsh'],
             env               = platform.base_env,
+            workdir           = FormatInterpolate("{workdir}"),
             haltOnFailure     = True,
             **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer Script'
@@ -488,6 +489,7 @@ def generate_installer(platform):
             source            = dlls_src,
             destination       = dlls_dst,
             env               = platform.base_env,
+            workdir           = FormatInterpolate("{workdir}"),
             haltOnFailure     = True,
             **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer DLL\'s'
