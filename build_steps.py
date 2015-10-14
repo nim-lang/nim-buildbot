@@ -365,17 +365,6 @@ def boot_nimrod_release(platform):
                 'Generate', 'Generating', 'Generated', 'C Sources'
             )
         ),
-
-        # ShellCommand(
-        #     name              = 'Build Tarball',
-        #     description       = 'Building',
-        #     descriptionDone   = 'Built',
-        #     descriptionSuffix = ' Tarball',
-        #     command           = ['koch', 'zip', '-d:release'],
-        #     workdir           = str(platform.nim_dir),
-        #     env               = platform.base_env,
-        #     haltOnFailure     = True,
-        # )
     ]
 
 
@@ -385,15 +374,6 @@ def FormatInterpolate(format_string):
     def render_revision(props):
         return format_string.format(**props.properties)
     return render_revision
-
-def StripDriveInterpolate(format_string):
-    @renderer
-    def render_revision(props):
-        print(props.properties)
-        return format_string.format(**props.properties)[2:]
-    return render_revision
-
-base_dir = StripDriveInterpolate("{workdir}")
 
 @inject_paths
 def run_testament(platform):
@@ -471,8 +451,8 @@ def upload_release(platform):
 
 @inject_paths
 def generate_installer(platform):
-    script_src = str(platform.absolute_idir / "tools" / "niminst")
-    script_dst = str(platform.absolute_idir / "build")
+    script_src = str(platform.current_dir / 'build' / "tools" / "niminst" / 'EnvVarUpdate.nsh')
+    script_dst = str(platform.current_dir / 'build' / "build")
 
     dlls_src = str(platform.current_dir / ".." / "dlls")
     dlls_dst = str(platform.current_dir / "build" / "bin")
@@ -482,15 +462,12 @@ def generate_installer(platform):
     upload_url = 'public_html/' + upload_dst
 
     return [
-        Robocopy(
-            source            = script_src,
-            destination       = script_dst,
-            files             = ['EnvVarUpdate.nsh'],
+        ShellCommand(
+            command           = ['copy', '/Y', script_src, script_dst],
             env               = platform.base_env,
-            workdir           = FormatInterpolate("{workdir}"),
             haltOnFailure     = True,
             **gen_description(
-                'Copy', 'Copying', 'Copied', 'Installer Script'
+                'Copy', 'Copying', 'Copied', 'NSIS Installer Script'
             )
         ),
 
@@ -498,7 +475,6 @@ def generate_installer(platform):
             source            = dlls_src,
             destination       = dlls_dst,
             env               = platform.base_env,
-            workdir           = FormatInterpolate("{workdir}"),
             haltOnFailure     = True,
             **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer DLL\'s'
