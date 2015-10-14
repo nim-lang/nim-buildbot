@@ -5,7 +5,7 @@ from buildbot.steps.transfer import FileUpload, DirectoryUpload
 from buildbot.steps.mswin import Robocopy
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Property, Interpolate, renderer
-from buildbot.process.results import FAILURE, SUCCESS
+from buildbot.status.results import FAILURE, SUCCESS
 from buildbot.steps.master import MasterShellCommand
 
 # Constants
