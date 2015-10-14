@@ -5,6 +5,7 @@ from buildbot.steps.transfer import FileUpload, DirectoryUpload
 from buildbot.steps.mswin import Robocopy
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Property, Interpolate, renderer
+from buildbot.process.results import FAILURE, SUCCESS
 from buildbot.steps.master import MasterShellCommand
 
 # Constants
@@ -465,6 +466,7 @@ def generate_installer(platform):
         ShellCommand(
             command           = ['copy', '/Y', script_src, script_dst],
             env               = platform.base_env,
+            workdir           = str(platform.current_dir),
             haltOnFailure     = True,
             **gen_description(
                 'Copy', 'Copying', 'Copied', 'NSIS Installer Script'
@@ -475,7 +477,9 @@ def generate_installer(platform):
             source            = dlls_src,
             destination       = dlls_dst,
             env               = platform.base_env,
+            workdir           = str(platform.current_dir),
             haltOnFailure     = True,
+            decodeRC          = {i: SUCCESS for i in range(0,8)},
             **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer DLL\'s'
             )
@@ -494,6 +498,7 @@ def generate_installer(platform):
         DirectoryUpload(
             slavesrc   = upload_src,
             masterdest = upload_dst,
+            workdir    = str(platform.current_dir),
             url        = FormatInterpolate(upload_url),
             compress   = 'bz2'
         )
