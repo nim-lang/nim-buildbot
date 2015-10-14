@@ -389,6 +389,7 @@ def FormatInterpolate(format_string):
 def StripDriveInterpolate(format_string):
     @renderer
     def render_revision(props):
+        print(props.properties)
         return format_string.format(**props.properties)[2:]
     return render_revision
 
@@ -451,7 +452,7 @@ def upload_release(platform):
 
     return [
         MasterShellCommand(
-            command    = ['mkdir', '-p', Interpolate(test_directory)],
+            command    = ['mkdir', '-p', FormatInterpolate(test_directory)],
             path       = "public_html",
             hideStepIf = True
         ),
@@ -486,7 +487,7 @@ def generate_installer(platform):
             destination       = script_dst,
             files             = ['EnvVarUpdate.nsh'],
             env               = platform.base_env,
-            workdir           = base_dir,
+            workdir           = FormatInterpolate("{workdir}"),
             haltOnFailure     = True,
             **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer Script'
@@ -497,7 +498,7 @@ def generate_installer(platform):
             source            = dlls_src,
             destination       = dlls_dst,
             env               = platform.base_env,
-            workdir           = base_dir,
+            workdir           = FormatInterpolate("{workdir}"),
             haltOnFailure     = True,
             **gen_description(
                 'Copy', 'Copying', 'Copied', 'Installer DLL\'s'
